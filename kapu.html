@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siker Portál - Belépés</title>
+    <style>
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f5f7; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; color: #333; }
+        .auth-container { background: white; padding: 40px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 100%; max-width: 420px; text-align: center; max-height: 90vh; overflow-y: auto; border-top: 5px solid #104a8e; }
+        h1 { color: #222; margin-top: 0; font-weight: 300; font-size: 28px; letter-spacing: 1px; }
+        .highlight-blue { color: #104a8e; font-weight: 600; }
+        .tabs { display: flex; margin-bottom: 25px; border-bottom: 1px solid #ddd; }
+        .tab { flex: 1; padding: 12px; cursor: pointer; font-weight: 600; color: #888; transition: 0.3s; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .tab.active { color: #104a8e; border-bottom: 3px solid #104a8e; }
+        .form-group { margin-bottom: 18px; text-align: left; }
+        label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 6px; text-transform: uppercase; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; transition: 0.3s; }
+        input:focus { outline: none; border-color: #104a8e; }
+        button { width: 100%; background-color: #104a8e; color: white; border: none; padding: 14px; font-size: 14px; font-weight: 600; border-radius: 4px; cursor: pointer; transition: 0.3s; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        button:hover { background-color: #0b3566; }
+        .alert { padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 13px; font-weight: bold; display: none; }
+        .alert.error { background-color: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+        .alert.success { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        #registerForm { display: none; }
+    </style>
+</head>
+<body>
+<div class="auth-container">
+    <h1>Siker <span class="highlight-blue">Portál</span></h1>
+    <div id="alertBox" class="alert"></div>
+    
+    <div class="tabs">
+        <div class="tab active" id="tabLogin" onclick="switchTab('login')">Belépés</div>
+        <div class="tab" id="tabRegister" onclick="switchTab('register')">Regisztráció</div>
+    </div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group"><label>E-mail cím</label><input type="email" id="logEmail" required></div>
+        <div class="form-group"><label>Jelszó</label><input type="password" id="logPassword" required></div>
+        <button type="submit">Belépés a rendszerbe</button>
+    </form>
+
+    <form id="registerForm" onsubmit="handleRegister(event)">
+        <div class="form-group"><label>Teljes Név</label><input type="text" id="regName" required></div>
+        <div class="form-group"><label>E-mail cím</label><input type="email" id="regEmail" required></div>
+        <div class="form-group"><label>Jelszó</label><input type="password" id="regPassword" required></div>
+        <div class="form-group">
+            <label>A Te Üzleti Kódod (12 számjegy)</label>
+            <input type="text" id="regFboId" required maxlength="12" pattern="[0-9]{12}">
+        </div>
+        <div class="form-group">
+            <label style="color:#104a8e;">Szponzorod Kódja (Opcionális)</label>
+            <input type="text" id="regSponsorId" placeholder="Akihez csatlakoztál (12 szj.)" maxlength="12" pattern="[0-9]{12}">
+        </div>
+        <button type="submit" style="background-color: #222;">Fiók Igénylése</button>
+    </form>
+</div>
+
+<script>
+    function switchTab(tab) {
+        document.getElementById('alertBox').style.display = 'none';
+        document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+        document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+        document.getElementById('tabLogin').className = tab === 'login' ? 'tab active' : 'tab';
+        document.getElementById('tabRegister').className = tab === 'register' ? 'tab active' : 'tab';
+    }
+    function showAlert(msg, type) { const box = document.getElementById('alertBox'); box.innerText = msg; box.className = `alert ${type}`; box.style.display = 'block'; }
+
+    async function handleRegister(e) {
+        e.preventDefault();
+        const body = {
+            name: document.getElementById('regName').value, email: document.getElementById('regEmail').value,
+            password: document.getElementById('regPassword').value, fbo_id: document.getElementById('regFboId').value,
+            sponsor_fbo: document.getElementById('regSponsorId').value
+        };
+        try {
+            const res = await fetch('/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+            const data = await res.json();
+            if (!res.ok) showAlert(data.error, 'error');
+            else { showAlert(data.message, 'success'); setTimeout(() => switchTab('login'), 3000); }
+        } catch (err) { showAlert("Szerver hiba!", "error"); }
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        try {
+            const res = await fetch('/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: document.getElementById('logEmail').value, password: document.getElementById('logPassword').value }) });
+            const data = await res.json();
+            if (!res.ok) showAlert(data.error, 'error');
+            else {
+                showAlert("Sikeres belépés!", 'success');
+                localStorage.setItem('sikerPortalToken', data.token); // ÁTÍRVA
+                localStorage.setItem('sikerPortalUser', data.name); // ÁTÍRVA
+                setTimeout(() => window.location.href = "hub.html", 1000);
+            }
+        } catch (err) { showAlert("Szerver hiba!", "error"); }
+    }
+</script>
+</body>
+</html>

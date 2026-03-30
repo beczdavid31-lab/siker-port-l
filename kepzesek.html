@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siker Portál - Akadémia</title>
+    <style>
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f5f7; margin: 0; padding: 0; color: #333; }
+        .topbar { background-color: #104a8e; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 10px; position: sticky; top: 0; z-index: 100;}
+        .topbar h2 { margin: 0; color: #ffffff; font-weight: 400; font-size: 22px; letter-spacing: 1px;}
+        .topbar h2 span { font-weight: 700; }
+        .btn-back { background-color: transparent; color: white; border: 1px solid rgba(255,255,255,0.5); padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; text-decoration: none; }
+        .btn-back:hover { background-color: rgba(255,255,255,0.1); border-color: white; }
+
+        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+        
+        .tabs-nav { display: flex; background: white; border-radius: 6px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 30px; overflow: hidden; border: 1px solid #ddd; }
+        .tab-btn { flex: 1; padding: 18px 10px; text-align: center; cursor: pointer; font-weight: 600; color: #666; transition: 0.3s; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 3px solid transparent; }
+        .tab-btn:hover { background-color: #f9f9f9; color: #104a8e; }
+        .tab-btn.active { color: #104a8e; border-bottom: 3px solid #104a8e; background-color: #f0f7ff; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .header-text { text-align: center; margin-bottom: 40px; }
+        .header-text h1 { color: #222; font-weight: 300; font-size: 32px; margin-bottom: 10px; }
+        .header-text p { color: #666; font-size: 16px; }
+
+        .module-card { background: white; border-radius: 6px; padding: 30px; margin-bottom: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; border-top: 4px solid #104a8e; transition: all 0.4s ease; max-width: 800px; margin-left: auto; margin-right: auto;}
+        .module-card h3 { margin-top: 0; color: #104a8e; font-size: 22px; border-bottom: 1px solid #eee; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .locked { opacity: 0.5; pointer-events: none; filter: grayscale(100%); border-top-color: #999; }
+        .locked-icon { font-size: 20px; color: #999; }
+        .unlocked-icon { font-size: 20px; color: #4caf50; display: none; }
+        .module-card:not(.locked) .unlocked-icon { display: inline-block; }
+        .module-card:not(.locked) .locked-icon { display: none; }
+
+        .video-container { width: 100%; background: #000; border-radius: 4px; overflow: hidden; margin-bottom: 20px; }
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+        .quiz-section { background: #f9f9f9; padding: 20px; border-radius: 4px; border: 1px solid #e0e0e0; }
+        .quiz-section p { font-weight: 600; color: #333; margin-top: 0; }
+        .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .option-label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 15px; color: #555; padding: 8px; border-radius: 4px; transition: 0.2s; }
+        .option-label:hover { background: #e3f2fd; }
+        
+        .btn-action { display: inline-block; background-color: #104a8e; color: white; border: none; padding: 12px 25px; font-size: 14px; font-weight: 600; border-radius: 4px; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; text-align: center;}
+        .btn-action:hover { background-color: #0b3566; }
+
+        .final-exam { border-top-color: #fbc02d; }
+        .final-exam h3 { color: #f57f17; }
+        .success-msg { color: #2e7d32; font-weight: bold; margin-top: 10px; display: none; }
+        .error-msg { color: #d32f2f; font-weight: bold; margin-top: 10px; display: none; }
+        #celebration { display: none; text-align: center; padding: 40px; background: white; border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 5px solid #4caf50; max-width: 800px; margin: 0 auto;}
+
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+        .lib-card { background: white; border-radius: 6px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; display: flex; flex-direction: column; }
+        .lib-card h3 { color: #104a8e; font-size: 18px; margin-top: 0; margin-bottom: 10px; }
+        .lib-card p { color: #666; font-size: 13px; margin-top: 0; margin-bottom: 15px; flex-grow: 1; }
+        
+        .dl-card { background: white; border-radius: 6px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; border-left: 5px solid #104a8e; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;}
+        .dl-info h3 { margin: 0 0 5px 0; color: #333; font-size: 18px; }
+        .dl-info p { margin: 0; color: #777; font-size: 14px; }
+        .icon-doc { font-size: 30px; margin-right: 15px; color: #104a8e; }
+        .dl-left { display: flex; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <script>
+        // Módosított Token ellenőrzés!
+        if (!localStorage.getItem('sikerPortalToken')) { window.location.href = 'kapu.html'; }
+    </script>
+
+    <div class="topbar">
+        <h2>Siker <span>Akadémia</span></h2>
+        <a href="hub.html" class="btn-back">⬅ Vissza a Központba</a>
+    </div>
+
+    <div class="container">
+        
+        <div class="tabs-nav">
+            <div class="tab-btn active" onclick="openTab('tab-alapkepzes', this)">🎓 Alapképzés</div>
+            <div class="tab-btn" onclick="openTab('tab-videotar', this)">▶️ Videótár</div>
+            <div class="tab-btn" onclick="openTab('tab-prezentaciok', this)">📄 Prezentációk</div>
+        </div>
+
+        <div id="tab-alapkepzes" class="tab-content active">
+            <div class="header-text">
+                <h1>Kötelező Alapképzés</h1>
+                <p>Haladj sorban a modulokon. A következő videó csak az előző sikeres tesztje után válik elérhetővé!</p>
+            </div>
+            <div class="module-card" id="mod1">
+                <h3>1. Modul: Alapok <span class="locked-icon">🔒</span><span class="unlocked-icon">✅</span></h3>
+                <div class="video-container"><div class="video-wrapper"><iframe src="https://www.youtube.com/embed/YxkpT7tA84M" allowfullscreen></iframe></div></div>
+                <div class="quiz-section">
+                    <p>Kérdés 1: Milyen színű egy érett, piros alma?</p>
+                    <div class="options"><label class="option-label"><input type="radio" name="q1" value="A"> A) Kék</label><label class="option-label"><input type="radio" name="q1" value="B"> B) Piros</label></div>
+                    <button class="btn-action" onclick="checkAnswer(1, 'B')">Ellenőrzés & Tovább</button>
+                    <div class="error-msg" id="err1">Helytelen válasz, próbáld újra!</div>
+                    <div class="success-msg" id="succ1">Helyes! A következő modul feloldva.</div>
+                </div>
+            </div>
+
+            <div class="module-card locked" id="mod2">
+                <h3>2. Modul: Második lépés <span class="locked-icon">🔒</span><span class="unlocked-icon">✅</span></h3>
+                <div class="video-container"><div class="video-wrapper"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe></div></div>
+                <div class="quiz-section">
+                    <p>Kérdés 2: Mennyi pontosan 2 + 2?</p>
+                    <div class="options"><label class="option-label"><input type="radio" name="q2" value="A"> A) Három</label><label class="option-label"><input type="radio" name="q2" value="B"> B) Négy</label></div>
+                    <button class="btn-action" onclick="checkAnswer(2, 'B')">Ellenőrzés & Tovább</button>
+                    <div class="error-msg" id="err2">Helytelen válasz, próbáld újra!</div>
+                    <div class="success-msg" id="succ2">Helyes! A következő modul feloldva.</div>
+                </div>
+            </div>
+
+            <div class="module-card final-exam locked" id="mod3">
+                <h3>🎓 Záróvizsga <span class="locked-icon">🔒</span></h3>
+                <div class="quiz-section">
+                    <p style="color:#d32f2f;">Válaszold meg az összes kérdést a képzés befejezéséhez!</p>
+                    <p>1. Milyen színű a piros alma?</p>
+                    <div class="options"><label class="option-label"><input type="radio" name="f1" value="A"> A) Kék</label><label class="option-label"><input type="radio" name="f1" value="B"> B) Piros</label></div>
+                    <p>2. Mennyi 2 + 2?</p>
+                    <div class="options"><label class="option-label"><input type="radio" name="f2" value="A"> A) 4</label><label class="option-label"><input type="radio" name="f2" value="B"> B) 5</label></div>
+                    <button class="btn-action" onclick="checkFinalExam()" style="background-color: #fbc02d; color:#333;">Vizsga Beküldése</button>
+                    <div class="error-msg" id="errFinal">Nem minden válasz helyes! Kérlek, nézd át újra.</div>
+                </div>
+            </div>
+
+            <div id="celebration">
+                <h1 style="font-size: 50px; margin:0;">🎉</h1>
+                <h1 style="color: #2e7d32;">Gratulálunk!</h1>
+                <p style="font-size: 18px; color:#555;">Sikeresen elvégezted az Akadémia alapképzését!</p>
+                <a href="crm.html" class="btn-action" style="margin-top:20px;">Irány a CRM Parancsnoki Híd ➔</a>
+            </div>
+        </div>
+
+        <div id="tab-videotar" class="tab-content">
+            <div class="header-text">
+                <h1>Videótár & Előadások</h1>
+                <p>Nézz bele a legújabb felvételekbe, motivációs előadásokba és bemutatókba!</p>
+            </div>
+            <div class="grid-layout">
+                <div class="lib-card">
+                    <h3>Szabad Életérzés</h3>
+                    <p>Hivatalos összefoglaló a legjobb pillanatokról. Meríts motivációt!</p>
+                    <div class="video-container"><div class="video-wrapper"><iframe src="https://www.youtube.com/embed/97fVHNMLuoA" allowfullscreen></iframe></div></div>
+                </div>
+                <div class="lib-card">
+                    <h3>Üzleti Prezentáció (Minta)</h3>
+                    <p>Hogyan tartsd meg a legtökéletesebb 15 perces tájékoztatót.</p>
+                    <div class="video-container"><div class="video-wrapper"><iframe src="https://www.youtube.com/embed/VGB3_l8iU-8" allowfullscreen></iframe></div></div>
+                </div>
+                <div class="lib-card">
+                    <h3>Termékbemutató: Életmódváltás</h3>
+                    <p>Részletes tájékoztató a programokról és azok hatásairól.</p>
+                    <div class="video-container"><div class="video-wrapper"><iframe src="https://www.youtube.com/embed/zH09zS-H0j4" allowfullscreen></iframe></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-prezentaciok" class="tab-content">
+            <div class="header-text"><h1>Letölthető Munkaanyagok</h1><p>Minden dia, PDF és dokumentum.</p></div>
+            <div class="dl-card"><div class="dl-left"><span class="icon-doc">📊</span><div class="dl-info"><h3>Hivatalos Üzleti Prezentáció</h3><p>PPTX formátum.</p></div></div><a href="#" class="btn-action">📥 Letöltés</a></div>
+            <div class="dl-card"><div class="dl-left"><span class="icon-doc">📄</span><div class="dl-info"><h3>Meghívási Forgatókönyvek</h3><p>PDF formátum.</p></div></div><a href="#" class="btn-action">📥 Letöltés</a></div>
+        </div>
+
+    </div>
+
+    <script>
+        function openTab(tabId, element) {
+            const contents = document.querySelectorAll('.tab-content'); contents.forEach(c => c.classList.remove('active'));
+            const btns = document.querySelectorAll('.tab-btn'); btns.forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active'); element.classList.add('active');
+        }
+        let currentLevel = parseInt(localStorage.getItem('academyProgress')) || 1;
+        unlockModulesUpTo(currentLevel);
+        function checkAnswer(modNum, correctValue) {
+            const radios = document.getElementsByName('q' + modNum);
+            let selected = '';
+            for (let i = 0; i < radios.length; i++) { if (radios[i].checked) { selected = radios[i].value; break; } }
+            document.getElementById('err' + modNum).style.display = 'none'; document.getElementById('succ' + modNum).style.display = 'none';
+            if (selected === correctValue) {
+                document.getElementById('succ' + modNum).style.display = 'block';
+                if (currentLevel === modNum) {
+                    currentLevel++; localStorage.setItem('academyProgress', currentLevel); unlockModulesUpTo(currentLevel);
+                    setTimeout(() => { document.getElementById('mod' + currentLevel).scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 800);
+                }
+            } else { document.getElementById('err' + modNum).style.display = 'block'; }
+        }
+        function unlockModulesUpTo(level) {
+            for (let i = 1; i <= 3; i++) { const mod = document.getElementById('mod' + i); if (mod && i <= level) { mod.classList.remove('locked'); } }
+        }
+        function checkFinalExam() {
+            const f1 = getSelected('f1'); const f2 = getSelected('f2');
+            document.getElementById('errFinal').style.display = 'none';
+            if (f1==='B' && f2==='A') {
+                document.getElementById('mod3').style.display = 'none';
+                document.getElementById('celebration').style.display = 'block';
+                document.getElementById('celebration').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else { document.getElementById('errFinal').style.display = 'block'; }
+        }
+        function getSelected(name) {
+            const radios = document.getElementsByName(name);
+            for (let i = 0; i < radios.length; i++) { if (radios[i].checked) return radios[i].value; } return '';
+        }
+    </script>
+</body>
+</html>

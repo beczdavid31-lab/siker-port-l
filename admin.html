@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siker Portál - Admin Panel</title>
+    <style>
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f5f7; margin: 0; padding: 0; color: #333; }
+        
+        /* Pirosas beütés az Admin fejlécben */
+        .topbar { background-color: #c62828; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100;}
+        .topbar h2 { margin: 0; color: #ffffff; font-weight: 400; font-size: 22px; letter-spacing: 1px;}
+        .topbar h2 span { font-weight: 700; }
+        .btn-back { background-color: transparent; color: white; border: 1px solid rgba(255,255,255,0.5); padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; text-decoration: none; }
+        .btn-back:hover { background-color: rgba(255,255,255,0.2); border-color: white; }
+
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .header-text { margin-bottom: 30px; }
+        .header-text h1 { color: #222; font-weight: 300; font-size: 32px; margin: 0 0 10px 0; }
+        .header-text p { color: #666; margin: 0; }
+
+        .table-card { background: white; border-radius: 6px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background-color: #f9f9f9; padding: 15px; font-size: 13px; text-transform: uppercase; color: #888; border-bottom: 2px solid #ddd; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; color: #444; }
+        
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .badge.admin { background: #ffebee; color: #c62828; }
+        .badge.user { background: #e3f2fd; color: #104a8e; }
+        
+        .badge.approved { background: #e8f5e9; color: #2e7d32; }
+        .badge.pending { background: #fff3e0; color: #f57f17; }
+
+        .btn-action { border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; margin-right: 5px; }
+        .btn-approve { background: #4caf50; color: white; }
+        .btn-approve:hover { background: #388e3c; }
+        .btn-make-admin { background: #ff9800; color: white; }
+        .btn-make-admin:hover { background: #f57f17; }
+        .btn-delete { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+        .btn-delete:hover { background: #c62828; color: white; }
+    </style>
+</head>
+<body>
+
+    <script>
+        const token = localStorage.getItem('sikerPortalToken');
+        if (!token) window.location.href = 'kapu.html';
+    </script>
+
+    <div class="topbar">
+        <h2>Siker <span>Admin Panel</span></h2>
+        <a href="hub.html" class="btn-back">⬅ Vissza a Központba</a>
+    </div>
+
+    <div class="container">
+        <div class="header-text">
+            <h1>Rendszergazdai Irányítópult</h1>
+            <p>Hagyd jóvá az új csapattagokat és kezeld a jogosultságokat.</p>
+        </div>
+
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Név</th>
+                        <th>E-mail</th>
+                        <th>Kód (FBO ID)</th>
+                        <th>Szponzor Kódja</th>
+                        <th>Jogosultság</th>
+                        <th>Státusz</th>
+                        <th>Műveletek</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/admin/users', { headers: { 'Authorization': 'Bearer ' + token } });
+                
+                if (res.status === 403) {
+                    alert('Nincs jogosultságod ehhez az oldalhoz!');
+                    window.location.href = 'hub.html';
+                    return;
+                }
+
+                const users = await res.json();
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = '';
+
+                users.forEach(user => {
+                    const roleBadge = user.role === 'admin' 
+                        ? '<span class="badge admin">Admin</span>' 
+                        : '<span class="badge user">Munkatárs</span>';
+                        
+                    const statusBadge = user.is_approved === 1 
+                        ? '<span class="badge approved">Jóváhagyva</span>' 
+                        : '<span class="badge pending">Függőben</span>';
+
+                    let actions = '';
+                    if (user.role !== 'admin') {
+                        if (user.is_approved === 0) {
+                            actions += `<button class="btn-action btn-approve" onclick="approveUser(${user.id})">Jóváhagyás</button>`;
+                        }
+                        actions += `
+                            <button class="btn-action btn-make-admin" onclick="makeAdmin(${user.id})">Adminná tesz</button>
+                            <button class="btn-action btn-delete" onclick="deleteUser(${user.id})">Törlés</button>
+                        `;
+                    } else {
+                        actions = '<i>(Védett fiók)</i>';
+                    }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>#${user.id}</td>
+                            <td><b>${user.name}</b></td>
+                            <td>${user.email}</td>
+                            <td>${user.fbo_id}</td>
+                            <td>${user.sponsor_fbo || '-'}</td>
+                            <td>${roleBadge}</td>
+                            <td>${statusBadge}</td>
+                            <td>${actions}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error('Hiba a felhasználók betöltésekor:', error);
+            }
+        }
+
+        async function approveUser(id) {
+            await fetch(`/api/admin/approve/${id}`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
+            loadUsers();
+        }
+
+        async function makeAdmin(id) {
+            if(confirm('Biztosan Admin jogosultságot adsz neki?')) {
+                await fetch(`/api/admin/make-admin/${id}`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
+                loadUsers();
+            }
+        }
+
+        async function deleteUser(id) {
+            if(confirm('Biztosan VÉGLEGESEN törlöd ezt a fiókot?')) {
+                await fetch(`/api/admin/user/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+                loadUsers();
+            }
+        }
+
+        // Indításkor betöltjük a listát
+        loadUsers();
+    </script>
+</body>
+</html>

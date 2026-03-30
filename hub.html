@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siker Portál - Központ</title>
+    <style>
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f5f7; margin: 0; padding: 0; color: #333; }
+        .topbar { background-color: #104a8e; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 10px;}
+        .topbar h2 { margin: 0; color: #ffffff; font-weight: 400; font-size: 22px; letter-spacing: 1px;}
+        .topbar h2 span { font-weight: 700; }
+        .user-info { color: rgba(255,255,255,0.9); margin-right: 20px; font-size: 14px; }
+        .btn-logout { background-color: transparent; color: white; border: 1px solid rgba(255,255,255,0.5); padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        .btn-logout:hover { background-color: rgba(255,255,255,0.1); border-color: white; }
+
+        .container { max-width: 1100px; margin: 60px auto; padding: 0 20px; text-align: center; }
+        h1 { color: #222; margin-bottom: 50px; font-weight: 300; font-size: 32px; }
+
+        .tile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+        .tile { background: white; border-radius: 6px; padding: 40px 30px; text-decoration: none; color: #333; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: all 0.3s ease; border-bottom: 3px solid transparent; display: flex; flex-direction: column; align-items: center; border: 1px solid #eee; }
+        .tile:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); border-bottom: 3px solid #104a8e; }
+        .tile.admin:hover { border-bottom: 3px solid #c62828; }
+        .tile.admin { display: none; }
+
+        .icon-circle { width: 70px; height: 70px; background-color: #104a8e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; font-size: 30px; color: #ffffff; box-shadow: 0 5px 15px rgba(16, 74, 142, 0.2); }
+        .tile.admin .icon-circle { background-color: #c62828; box-shadow: 0 5px 15px rgba(198, 40, 40, 0.2); }
+
+        .tile h2 { margin: 0 0 10px 0; font-size: 20px; font-weight: 600; color: #222; }
+        .tile p { margin: 0; color: #777; font-size: 14px; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <script>
+        const token = localStorage.getItem('sikerPortalToken'); // ÁTÍRVA
+        if (!token) window.location.href = 'kapu.html';
+        
+        function logout() {
+            localStorage.removeItem('sikerPortalToken'); // ÁTÍRVA
+            localStorage.removeItem('sikerPortalUser'); // ÁTÍRVA
+            window.location.href = 'kapu.html';
+        }
+    </script>
+
+    <div class="topbar">
+        <h2>Siker <span>Portál</span></h2>
+        <div>
+            <span class="user-info">Bejelentkezve: <b id="userName"></b></span>
+            <button class="btn-logout" onclick="logout()">Kijelentkezés</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Válaszd ki a munkafelületet</h1>
+        <div class="tile-grid">
+            <a href="kepzesek.html" class="tile academy">
+                <div class="icon-circle">🎓</div><h2>Képzések & Anyagok</h2><p>Prezentációk, oktatóvideók és forgatókönyvek.</p>
+            </a>
+            <a href="crm.html" class="tile crm">
+                <div class="icon-circle">📊</div><h2>Okos CRM Rendszer</h2><p>Jelöltek, vásárlók, feladatok kezelése.</p>
+            </a>
+            <a href="admin.html" class="tile admin" id="adminTile">
+                <div class="icon-circle">👑</div><h2>Admin Panel</h2><p>Munkatársak jóváhagyása, rendszerjogosultságok.</p>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('userName').innerText = localStorage.getItem('sikerPortalUser') || 'Munkatárs';
+
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+
+            const userData = JSON.parse(jsonPayload);
+            if (userData.role === 'admin') {
+                document.getElementById('adminTile').style.display = 'flex';
+            }
+        } catch(e) { console.error("Hiba", e); }
+    </script>
+
+</body>
+</html>
