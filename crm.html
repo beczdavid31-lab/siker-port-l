@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siker Portál - Parancsnoki Híd</title>
+    <style>
+        /* Modern, Vállalati Stílus (Siker Portál Design) */
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f5f7; margin: 0; padding: 0; color: #333; }
+        
+        .topbar { background-color: #104a8e; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100;}
+        .topbar h2 { margin: 0; color: #ffffff; font-weight: 400; font-size: 22px; letter-spacing: 1px;}
+        .topbar h2 span { font-weight: 700; }
+        .user-info { color: rgba(255,255,255,0.9); margin-right: 20px; font-size: 14px; }
+        .btn-logout { background-color: transparent; color: white; border: 1px solid rgba(255,255,255,0.5); padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; text-decoration: none; }
+        .btn-logout:hover { background-color: rgba(255,255,255,0.1); border-color: white; }
+
+        .container { max-width: 1300px; margin: 30px auto; padding: 0 20px;}
+        h1, h2, h3 { color: #104a8e; margin-top: 0; }
+        
+        .top-buttons { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #eee;}
+        
+        button, .import-label { border: none; cursor: pointer; font-weight: 600; transition: 0.3s; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-size: 12px; padding: 10px 15px;}
+        .btn-blue { background-color: #104a8e; color: white; }
+        .btn-blue:hover { background-color: #0b3566; }
+        .btn-green { background-color: #2e7d32; color: white; }
+        .btn-green:hover { background-color: #1b5e20; }
+        .btn-yellow { background-color: #fbc02d; color: #333; }
+        .btn-yellow:hover { background-color: #f57f17; color: white;}
+        .btn-red { background-color: #d32f2f; color: white; }
+        .btn-outline { background: transparent; border: 1px solid #104a8e; color: #104a8e; }
+        .btn-outline:hover { background: #f0f7ff; }
+        .import-label { border: 1px solid #ccc; display: inline-block; margin: 0;}
+        .btn-small { padding: 6px 10px; font-size: 11px; margin-right: 4px; margin-bottom: 4px; }
+        
+        /* AI Gomb extra stílus */
+        .btn-ai { background: linear-gradient(135deg, #104a8e 0%, #00b4db 100%); color: white; font-size: 16px; padding: 15px; width: 100%; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 180, 219, 0.4); border: none; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; transition: transform 0.2s; }
+        .btn-ai:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 180, 219, 0.6); }
+
+        .dashboard-container { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .dashboard-section { flex: 1; background: white; padding: 20px; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-width: 280px; border-top: 4px solid #104a8e; }
+        .dashboard-section h3 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; text-align: center; font-size: 16px; color: #333;}
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; }
+        .stat-item h4 { margin: 0; font-size: 28px; color: #104a8e; }
+        .stat-item p { margin: 5px 0 0 0; font-size: 11px; color: #666; font-weight: bold; text-transform: uppercase; }
+        
+        .mini-calendar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 15px; }
+        .cal-day { background: #f9f9f9; padding: 15px; border-radius: 6px; border-left: 5px solid #104a8e; font-size: 13px; border: 1px solid #eee;}
+        .cal-day.today { background: #fff8e1; border-left-color: #fbc02d; }
+        .task-item { background: white; padding: 8px; border-radius: 4px; font-size: 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #eee;}
+        .task-time { font-weight: bold; color: #d32f2f; }
+
+        .card { background: white; padding: 25px; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #eee; }
+        .form-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
+        .form-row > * { flex: 1; min-width: 180px; }
+        input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #104a8e; }
+        .address-group { background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #eee; }
+        .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; background: #f0f7ff; padding: 15px; border-radius: 6px; font-size: 13px; border: 1px solid #bbdefb; }
+
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+        th, td { padding: 15px 10px; text-align: left; border-bottom: 1px solid #eee; vertical-align: top; }
+        th { background-color: #104a8e; color: white; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px; font-size: 12px;}
+        
+        .contact-links a { display: inline-block; margin: 2px 4px 2px 0; color: #104a8e; text-decoration: none; font-size: 11px; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-weight: bold; border: 1px solid #bbdefb;}
+        .notes-area { background: #f9f9f9; padding: 15px; border-radius: 6px; font-size: 13px; max-height: 450px; overflow-y: auto; border: 1px solid #e0e0e0; margin-bottom: 10px; }
+        .note-item { border-bottom: 1px dashed #ccc; padding-bottom: 10px; margin-bottom: 10px; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; }
+        .note-item.pinned { background: #e3f2fd; border-left: 4px solid #104a8e; border-bottom: none; padding: 12px; border-radius: 4px; margin-bottom: 15px; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; color: white; font-weight: bold; display: inline-block; margin-bottom: 4px; text-transform: uppercase;}
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; padding: 10px; box-sizing: border-box; backdrop-filter: blur(3px);}
+        .modal { background: white; padding: 30px; border-radius: 6px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.3);}
+        .modal h3 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px;}
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; flex-wrap: wrap; border-top: 1px solid #eee; padding-top: 15px;}
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <h2>Siker <span>Portál</span></h2>
+    <div>
+        <span class="user-info">Szia, <b id="userNameDisplay"></b>!</span>
+        <button onclick="window.location.href='hub.html'" class="btn-outline" style="border-color: white; color: white; margin-right: 10px;">⬅ Központ</button>
+        <button onclick="logout()" class="btn-logout">Kijelentkezés</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="top-buttons">
+        <button onclick="toggleLang()" class="btn-outline" id="langBtn">🇬🇧 EN / 🇭🇺 HU</button>
+        
+        <button onclick="openTeamModal()" class="btn-blue">👥 Csapatom (Szponzori nézet)</button>
+        <button id="shareBtn" onclick="toggleShare()" class="btn-outline">👀 Szponzori rálátás: Töltés...</button>
+        
+        <label for="importFile" class="import-label btn-yellow tr" data-hu="📂 JSON Feltöltés" data-en="📂 Import JSON">📂 JSON Feltöltés</label>
+        <input type="file" id="importFile" style="display:none;" accept=".json" onchange="importBackup(event)">
+        <button onclick="exportBackup()" class="btn-yellow tr" data-hu="💾 JSON Mentés" data-en="💾 Backup JSON">💾 JSON Mentés</button>
+        <button onclick="exportToCSV()" class="btn-green tr" data-hu="📥 Excel Lista" data-en="📥 Export Excel">📥 Excel Lista</button>
+        
+        <button onclick="openFullCalendarModal()" class="btn-blue tr" data-hu="📅 Naptár" data-en="📅 Calendar">📅 Naptár</button>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="dashboard-section">
+            <h3 class="tr" data-hu="Mai Aktivitás" data-en="Today's Activity">Mai Aktivitás</h3>
+            <div class="stats-grid">
+                <div class="stat-item"><h4 id="dailyCalls">0</h4><p class="tr" data-hu="Hívás" data-en="Calls">Hívás</p></div>
+                <div class="stat-item"><h4 id="dailyMsgs">0</h4><p class="tr" data-hu="Üzenet" data-en="Messages">Üzenet</p></div>
+                <div class="stat-item"><h4 id="dailyMeetings">0</h4><p class="tr" data-hu="Találkozó" data-en="Meetings">Találkozó</p></div>
+            </div>
+        </div>
+        <div class="dashboard-section">
+            <h3 class="tr" data-hu="Havi Aktivitás" data-en="Monthly Activity">Havi Aktivitás</h3>
+            <div class="stats-grid">
+                <div class="stat-item"><h4 id="monthlyCalls">0</h4><p class="tr" data-hu="Hívás" data-en="Calls">Hívás</p></div>
+                <div class="stat-item"><h4 id="monthlyMsgs">0</h4><p class="tr" data-hu="Üzenet" data-en="Messages">Üzenet</p></div>
+                <div class="stat-item"><h4 id="monthlyMeetings">0</h4><p class="tr" data-hu="Találkozó" data-en="Meetings">Találkozó</p></div>
+            </div>
+        </div>
+        <div class="dashboard-section" style="flex: 2;">
+            <h3 class="tr" data-hu="Gyors Naptár" data-en="Quick Calendar">Gyors Naptár</h3>
+            <div class="mini-calendar" id="miniCalendar"></div>
+        </div>
+    </div>
+
+    <div class="card" style="border-top: 4px solid #104a8e;">
+        <h2 class="tr" data-hu="Új Kontakt Felvétele" data-en="Add New Contact">Új Kontakt Felvétele</h2>
+        
+        <button type="button" class="btn-ai" onclick="startAIDictation()">
+            🎙️ AI Hangalapú Adatbevitel (Diktálás)
+        </button>
+
+        <form id="crmForm">
+            <div class="form-row">
+                <input type="text" id="name" class="tr-ph" data-hu-ph="Név *" data-en-ph="Name *" placeholder="Név *" required>
+                <select id="status" required>
+                    <option value="" disabled selected class="tr" data-hu="Státusz (Kicsoda ő?) *" data-en="Status (Who is this?) *">Státusz (Kicsoda ő?) *</option>
+                    <option value="jelolt">Jelölt / Prospect</option><option value="vasarlo">Vásárló / Customer</option><option value="partner">Üzleti partner / Business Partner</option><option value="ful">FÜL / Pending</option>
+                </select>
+                <select id="process" required>
+                    <option value="" disabled selected class="tr" data-hu="Folyamat (Hol tartunk?) *" data-en="Process (Funnel Stage) *">Folyamat (Hol tartunk?) *</option>
+                    <option value="0_jelolt">0. Jelölt / Prospect</option><option value="1_meghivas">1. Meghívás / Invite</option><option value="2_bemutato">2. Bemutató / Presentation</option><option value="3_htt">3. HTT / Follow Up</option><option value="4_belepes">4. Belépés/Vásárlás / Sign Up</option><option value="5_elinditas">5. Elindítás / Onboarding</option><option value="6_munkatars">6. Munkatárs / Team Member</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <select id="occupation" required>
+                    <option value="" disabled selected class="tr" data-hu="Foglalkozás / Élethelyzet *" data-en="Occupation / Status *">Foglalkozás / Élethelyzet *</option>
+                    <option value="Alkalmazott (Irodai)">1. Alkalmazott (Irodai)</option><option value="Alkalmazott (Fizikai)">2. Alkalmazott (Fizikai)</option><option value="Vállalkozó">3. Vállalkozó</option><option value="Fodrász / Kozmetikus">4. Fodrász / Kozmetikus</option><option value="Egészségügyi dolgozó">5. Egészségügyi dolgozó</option><option value="Pedagógus / Tanár">6. Pedagógus / Tanár</option><option value="Vendéglátós / Szakács">7. Vendéglátós / Szakács</option><option value="Kereskedő / Eladó">8. Kereskedő / Eladó</option><option value="Sofőr / Taxis / Futár">9. Sofőr / Taxis / Futár</option><option value="Mérnök">10. Mérnök</option><option value="IT Szakember">11. IT Szakember</option><option value="Könyvelő / Pénzügyes">12. Könyvelő / Pénzügyes</option><option value="Építőipari szakember">13. Építőipari szakember</option><option value="HR / Toborzó">14. HR / Toborzó</option><option value="Értékesítő / Ingatlanos">15. Értékesítő / Ingatlanos</option><option value="Jogász / Ügyvéd">16. Jogász / Ügyvéd</option><option value="Diák / Hallgató">17. Diák / Hallgató</option><option value="Kismama / GYES-en lévő">18. Kismama / GYES-en lévő</option><option value="Nyugdíjas">19. Nyugdíjas</option><option value="Mezőgazdasági dolgozó">20. Mezőgazdasági dolgozó</option><option value="FBO / Volt FBO" style="font-weight:bold; color:#104a8e;">21. FBO / Volt FBO</option><option value="Egyéb">22. Egyéb...</option>
+                </select>
+                <input type="text" id="phone" class="tr-ph" data-hu-ph="Telefonszám" data-en-ph="Phone Number" placeholder="Telefonszám">
+                <input type="email" id="email" class="tr-ph" data-hu-ph="E-mail cím" data-en-ph="Email Address" placeholder="E-mail cím">
+                <input type="url" id="fb" class="tr-ph" data-hu-ph="Elsődleges közösségi link (pl. Facebook)" data-en-ph="Primary Social Link" placeholder="Elsődleges közösségi link (pl. Facebook)">
+            </div>
+            <div class="form-row address-group">
+                <input type="text" id="zip" class="tr-ph" data-hu-ph="Irányítószám" data-en-ph="Zip Code" placeholder="Irányítószám" style="max-width: 120px;">
+                <input type="text" id="city" class="tr-ph" data-hu-ph="Város" data-en-ph="City" placeholder="Város">
+                <input type="text" id="street" class="tr-ph" data-hu-ph="Utca" data-en-ph="Street" placeholder="Utca">
+                <input type="text" id="house" class="tr-ph" data-hu-ph="Házszám" data-en-ph="House Number" placeholder="Házszám" style="max-width: 120px;">
+            </div>
+            <div style="margin-bottom: 5px; font-weight: bold; font-size: 13px; color: #104a8e;" class="tr" data-hu="Facebook Csoportok:" data-en="Facebook Groups:">Facebook Csoportok:</div>
+            <div class="checkbox-group">
+                <label><input type="checkbox" class="new-group-cb" value="Csoport 1"> <span class="tr" data-hu="Csoport 1" data-en="Group 1">Csoport 1</span></label><label><input type="checkbox" class="new-group-cb" value="Csoport 2"> <span class="tr" data-hu="Csoport 2" data-en="Group 2">Csoport 2</span></label><label><input type="checkbox" class="new-group-cb" value="Csoport 3"> <span class="tr" data-hu="Csoport 3" data-en="Group 3">Csoport 3</span></label><label><input type="checkbox" class="new-group-cb" value="Csoport 4"> <span class="tr" data-hu="Csoport 4" data-en="Group 4">Csoport 4</span></label><label><input type="checkbox" class="new-group-cb" value="Csoport 5"> <span class="tr" data-hu="Csoport 5" data-en="Group 5">Csoport 5</span></label>
+            </div>
+            <button type="submit" class="btn-blue tr" data-hu="💾 Személy Hozzáadása a Rendszerhez" data-en="💾 Add Contact to CRM" style="width: 100%; margin-top: 15px; padding: 15px; font-size: 15px;">💾 Személy Hozzáadása a Rendszerhez</button>
+        </form>
+    </div>
+
+    <div class="form-row card" style="background: #f0f7ff;">
+        <input type="text" id="searchName" class="tr-ph" data-hu-ph="Keresés: Név..." data-en-ph="Search: Name..." placeholder="Keresés: Név..." onkeyup="renderContacts()">
+        <input type="text" id="searchOcc" class="tr-ph" data-hu-ph="Keresés: Foglalkozás..." data-en-ph="Search: Occupation..." placeholder="Keresés: Foglalkozás..." onkeyup="renderContacts()">
+        <input type="text" id="searchZip" class="tr-ph" data-hu-ph="Irányítószám (pl. 67)..." data-en-ph="Zip code..." placeholder="Irányítószám (pl. 67)..." onkeyup="renderContacts()" style="max-width: 150px;">
+        
+        <select id="filterStatus" onchange="renderContacts()">
+            <option value="all" class="tr" data-hu="-- Minden Státusz --" data-en="-- All Statuses --">-- Minden Státusz --</option>
+            <option value="jelolt">Jelölt</option><option value="vasarlo">Vásárló</option><option value="partner">Üzleti partner</option><option value="ful">FÜL</option>
+        </select>
+        <select id="filterProcess" onchange="renderContacts()">
+            <option value="all" class="tr" data-hu="-- Minden Folyamat --" data-en="-- All Processes --">-- Minden Folyamat --</option>
+            <option value="0_jelolt">0. Jelölt</option><option value="1_meghivas">1. Meghívás</option><option value="2_bemutato">2. Bemutató</option><option value="3_htt">3. HTT</option><option value="4_belepes">4. Belépés/Vásárlás</option><option value="5_elinditas">5. Elindítás</option><option value="6_munkatars">6. Munkatárs</option>
+        </select>
+    </div>
+
+    <div class="card table-responsive" style="padding: 0; overflow: hidden;">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 35%;" class="tr" data-hu="Alapadatok (Név, Elérhetőség)" data-en="Basic Info (Name, Contact)">Alapadatok (Név, Elérhetőség)</th>
+                    <th style="width: 25%;" class="tr" data-hu="Státusz & Folyamat" data-en="Status & Process">Státusz & Folyamat</th>
+                    <th style="width: 40%;" class="tr" data-hu="Gyorsműveletek" data-en="Quick Actions">Gyorsműveletek</th>
+                </tr>
+            </thead>
+            <tbody id="contactList"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal-overlay" id="profileModal">
+    <div class="modal">
+        <div style="display:flex; justify-content:space-between; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+            <h2 id="profileName" style="margin: 0; color: #104a8e;">Név</h2>
+            <button onclick="closeModal('profileModal')" style="background:none; border:none; font-size:24px; cursor:pointer; color: #888;">✖</button>
+        </div>
+        
+        <div style="display:flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; font-size: 13px; background: #fdfdfd; padding: 15px; border-radius: 6px; border: 1px solid #eee;">
+            <div style="flex: 1; min-width: 200px; line-height: 1.8;">
+                <strong>💼 <span class="tr" data-hu="Foglalkozás:" data-en="Occupation:">Foglalkozás:</span></strong> <span id="profOcc" style="color: #555;"></span><br>
+                <strong>📊 <span class="tr" data-hu="Státusz:" data-en="Status:">Státusz:</span></strong> <span id="profStatus" style="color: #555;"></span><br>
+                <strong>🔄 <span class="tr" data-hu="Folyamat:" data-en="Process:">Folyamat:</span></strong> <span id="profProcess" style="color: #555;"></span>
+            </div>
+            <div style="flex: 1; min-width: 200px; line-height: 1.8;">
+                <strong>📞 <span class="tr" data-hu="Telefon:" data-en="Phone:">Telefon:</span></strong> <span id="profPhone" style="color: #555;"></span><br>
+                <strong>📧 <span class="tr" data-hu="E-mail:" data-en="Email:">E-mail:</span></strong> <span id="profEmail" style="color: #555;"></span><br>
+                <strong>🔗 <span class="tr" data-hu="Linkek:" data-en="Links:">Linkek:</span></strong> <span id="profLinks" style="color: #555;"></span>
+            </div>
+            <div style="flex: 1; min-width: 200px; line-height: 1.8;">
+                <strong>📍 <span class="tr" data-hu="Lakcím:" data-en="Address:">Lakcím:</span></strong> <span id="profileAddress" style="color: #555;"></span><br>
+                <strong>👥 <span class="tr" data-hu="Csoportok:" data-en="Groups:">Csoportok:</span></strong> <span id="profileGroups" style="color: #555;"></span>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+            <h3 style="margin:0; border:none;" class="tr" data-hu="Jegyzetek & Infók" data-en="Notes & Info">Jegyzetek & Infók</h3>
+            <button class="btn-green tr" style="padding: 8px 15px; border-radius: 4px;" data-hu="+ Új Jegyzet rögzítése" data-en="+ Add New Note" onclick="openNoteModalFromProfile()">+ Új Jegyzet</button>
+        </div>
+        
+        <div id="profileNotes" class="notes-area"></div>
+
+        <div class="modal-buttons">
+            <button class="btn-outline tr" data-hu="✏️ Adatok Szerkesztése" data-en="✏️ Edit Info" onclick="openEditFromProfile()">✏️ Adatok Szerkesztése</button>
+            <button onclick="closeModal('profileModal')" class="btn-blue tr" data-hu="Bezárás" data-en="Close">Bezárás</button>
+        </div>
+        <input type="hidden" id="currentProfileId">
+    </div>
+</div>
+
+<div class="modal-overlay" id="editContactModal">
+    <div class="modal">
+        <h3 class="tr" data-hu="Adatok Szerkesztése" data-en="Edit Contact Info">Adatok Szerkesztése</h3>
+        <div class="form-row"><input type="text" id="editName" class="tr-ph" data-hu-ph="Név *" data-en-ph="Name *"><select id="editOccupation"></select></div>
+        
+        <div style="font-weight: bold; font-size: 13px; margin-bottom: 5px; color: #104a8e;" class="tr" data-hu="Elérhetőségek & Lakcím:" data-en="Contact & Address:">Elérhetőségek & Lakcím:</div>
+        <div class="form-row address-group" style="margin-bottom: 10px;"><input type="text" id="editPhone" class="tr-ph" data-hu-ph="Telefon" data-en-ph="Phone"><input type="email" id="editEmail" class="tr-ph" data-hu-ph="Email" data-en-ph="Email"></div>
+        <div class="form-row address-group"><input type="text" id="editZip" placeholder="Ir.szám" style="max-width:80px;"><input type="text" id="editCity" placeholder="Város"><input type="text" id="editStreet" placeholder="Utca"><input type="text" id="editHouse" placeholder="Házszám" style="max-width:80px;"></div>
+        
+        <div style="font-weight: bold; font-size: 13px; margin-top: 15px; margin-bottom: 5px; color: #104a8e;" class="tr" data-hu="Linkek (Bármennyit hozzáadhatsz):" data-en="Links (Add as many as you want):">Linkek (Bármennyit hozzáadhatsz):</div>
+        <div id="dynamicLinksContainer" style="background: #f9f9f9; padding: 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #eee;">
+            <div id="existingLinksList" style="margin-bottom: 10px; font-size: 12px;"></div>
+            <div style="display: flex; gap: 5px;">
+                <input type="text" id="newLinkLabel" placeholder="Platform (pl. Insta)" style="flex: 1; margin: 0; padding: 8px;">
+                <input type="url" id="newLinkUrl" placeholder="https://..." style="flex: 2; margin: 0; padding: 8px;">
+                <button type="button" onclick="addDynamicLink()" class="btn-green" style="padding: 8px 15px; border-radius: 4px;">+</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 15px; margin-bottom: 5px; font-weight: bold; font-size: 13px; color: #104a8e;" class="tr" data-hu="Facebook Csoportok:" data-en="Facebook Groups:">Facebook Csoportok:</div>
+        <div class="checkbox-group">
+            <label><input type="checkbox" class="edit-group-cb" value="Csoport 1"> Csoport 1</label>
+            <label><input type="checkbox" class="edit-group-cb" value="Csoport 2"> Csoport 2</label>
+            <label><input type="checkbox" class="edit-group-cb" value="Csoport 3"> Csoport 3</label>
+            <label><input type="checkbox" class="edit-group-cb" value="Csoport 4"> Csoport 4</label>
+            <label><input type="checkbox" class="edit-group-cb" value="Csoport 5"> Csoport 5</label>
+        </div>
+
+        <div class="modal-buttons">
+            <button onclick="closeModal('editContactModal')" style="background: #9e9e9e; color: white;" class="tr" data-hu="Mégse" data-en="Cancel">Mégse</button>
+            <button onclick="saveEditedContact()" class="btn-green tr" data-hu="Módosítások mentése" data-en="Save Changes">Módosítások mentése</button>
+        </div>
+        <input type="hidden" id="editContactId">
+    </div>
+</div>
+
+<div class="modal-overlay" id="noteModal">
+    <div class="modal" style="max-width: 450px;">
+        <h3 class="tr" data-hu="Interakció / Infó rögzítése" data-en="Log Interaction / Info">Interakció / Infó rögzítése</h3>
+        <select id="noteType" style="width: 100%; margin-bottom: 15px;">
+            <option value="info" style="font-weight:bold; color:#104a8e;">ℹ️ Általános INFÓ</option>
+            <option value="call">📞 Telefonhívás</option>
+            <option value="message">💬 Üzenetváltás</option>
+            <option value="meeting">🤝 Találkozó</option>
+        </select>
+        <textarea id="noteText" rows="6" style="width: 100%;" class="tr-ph" data-hu-ph="Ide írd a jegyzetet... (Használhatsz Entert a sortöréshez!)" data-en-ph="Type your notes here..."></textarea>
+        <div class="modal-buttons">
+            <button onclick="closeModal('noteModal')" style="background: #9e9e9e; color: white;" class="tr" data-hu="Mégse" data-en="Cancel">Mégse</button>
+            <button onclick="saveNote()" class="btn-blue tr" data-hu="Mentés" data-en="Save">Mentés</button>
+        </div>
+        <input type="hidden" id="currentContactIdForNote">
+        <input type="hidden" id="editNoteId">
+    </div>
+</div>
+
+<div class="modal-overlay" id="taskModal">
+    <div class="modal" style="max-width: 450px;">
+        <h3 class="tr" data-hu="Emlékeztető beállítása" data-en="Set Reminder">Emlékeztető beállítása</h3>
+        <div class="form-row"><input type="date" id="taskDate" required><input type="time" id="taskTime" required></div>
+        <select id="taskType" style="width: 100%; margin-bottom: 15px;">
+            <option value="Hívás">Hívás / Call</option><option value="Üzenet">Üzenet / Message</option><option value="Találkozó">Találkozó / Meeting</option><option value="Egyéb">Egyéb / Other</option>
+        </select>
+        <input type="text" id="taskDesc" class="tr-ph" data-hu-ph="Leírás (pl. Termék megkérdezése)" data-en-ph="Description..." style="width: 100%; margin-bottom: 15px;">
+        
+        <button onclick="openGoogleCalendar()" style="background: #4285F4; color: white; width: 100%; margin-bottom: 15px; padding: 12px; border-radius: 4px;" class="tr" data-hu="🗓️ Mentés Google Naptárba (is)" data-en="🗓️ Save to Google Calendar">🗓️ Mentés Google Naptárba (is)</button>
+        
+        <div class="modal-buttons" style="justify-content: space-between; border-top:none; padding-top:0;">
+            <button onclick="closeModal('taskModal')" style="background: #9e9e9e; color: white; flex:1;" class="tr" data-hu="Mégse" data-en="Cancel">Mégse</button>
+            <button onclick="saveTask()" class="btn-green tr" style="flex:1;" data-hu="Mentés a CRM-be" data-en="Save to CRM">Mentés a CRM-be</button>
+        </div>
+        <input type="hidden" id="currentContactIdForTask">
+    </div>
+</div>
+
+<div class="modal-overlay" id="fullCalendarModal">
+    <div class="modal" style="max-width: 800px;">
+        <h3 class="tr" data-hu="Teljes Naptár" data-en="Full Calendar">Teljes Naptár</h3>
+        <div id="fullCalendarList" style="max-height: 400px; overflow-y: auto; padding: 10px;"></div>
+        <div class="modal-buttons"><button onclick="closeModal('fullCalendarModal')" class="btn-blue tr" data-hu="Bezárás" data-en="Close">Bezárás</button></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="teamModal">
+    <div class="modal" style="max-width: 900px;">
+        <h2 style="color: #104a8e; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px;">👥 Az én csapatom (Megosztott CRM-ek)</h2>
+        <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Itt látod azokat a munkatársaidat, akik engedélyezték a szponzori betekintést.</p>
+        
+        <div id="teamListContainer" style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px;">
+            Betöltés...
+        </div>
+
+        <div id="teamCrmViewer" style="display: none; border-top: 2px solid #eee; padding-top: 15px;">
+            <h3 id="teamCrmTitle" style="color: #2e7d32; margin-top:0;">Munkatárs Névlistája</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+                    <thead><tr style="background:#104a8e; color: white;"><th style="padding:10px;text-align:left;">Név & Elérhetőség</th><th style="padding:10px;text-align:left;">Státusz</th><th style="padding:10px;text-align:left;">Legutóbbi Jegyzetek</th></tr></thead>
+                    <tbody id="teamCrmTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="modal-buttons">
+            <button onclick="closeModal('teamModal')" class="btn-outline">Bezárás</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 1. Biztonsági őr ellenőrzése ---
+    const token = localStorage.getItem('sikerPortalToken');
+    if (!token) window.location.href = 'kapu.html';
+    document.getElementById('userNameDisplay').innerText = localStorage.getItem('sikerPortalUser') || 'Munkatárs';
+
+    function logout() {
+        localStorage.removeItem('sikerPortalToken');
+        localStorage.removeItem('sikerPortalUser');
+        window.location.href = 'kapu.html';
+    }
+
+    // --- IGAZI AI HANGALAPÚ ADATBEVITEL ---
+    function startAIDictation() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("A böngésződ sajnos nem támogatja a beépített hangfelismerést. Kérlek, használj Google Chrome-ot vagy Safarit!");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'hu-HU';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        const aiButton = document.querySelector('.btn-ai');
+        const originalText = aiButton.innerHTML;
+
+        recognition.onstart = function() {
+            aiButton.innerHTML = "🔴 HALLGATOM... Mondd az adatokat!";
+            aiButton.style.background = "linear-gradient(135deg, #d32f2f 0%, #ff5252 100%)";
+            aiButton.style.boxShadow = "0 4px 15px rgba(211, 47, 47, 0.6)";
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript.toLowerCase();
+            aiButton.innerHTML = "⏳ AI Elemzés és Kitöltés...";
+            
+            let nameMatch = transcript.match(/(?:neve|hívják|jelöltem)\s+([a-záéíóöőúüű]+\s+[a-záéíóöőúüű]+)/i);
+            if (nameMatch) {
+                const nameParts = nameMatch[1].split(' ');
+                const capitalizedName = nameParts.map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                document.getElementById('name').value = capitalizedName;
+            }
+
+            let phoneMatch = transcript.match(/(?:száma|telefon|telefonszáma)[\s:]*([\d\s\+\-]+)/i);
+            if (!phoneMatch) phoneMatch = transcript.match(/(\+?36|06)[\s\-]?\d{1,2}[\s\-]?\d{3}[\s\-]?\d{3,4}/);
+            if (phoneMatch) {
+                document.getElementById('phone').value = phoneMatch[0].trim();
+            }
+
+            let cityMatch = transcript.match(/(?:város|lakik|lépett be)[\s:]*([a-záéíóöőúüű]+)/i);
+            if (cityMatch && cityMatch[1] !== "város") {
+                document.getElementById('city').value = cityMatch[1].charAt(0).toUpperCase() + cityMatch[1].slice(1);
+            }
+
+            if (transcript.includes('vásárló') || transcript.includes('csatlakozott') || transcript.includes('vett')) {
+                document.getElementById('status').value = 'vasarlo';
+            } else if (transcript.includes('partner') || transcript.includes('üzlet')) {
+                document.getElementById('status').value = 'partner';
+            } else {
+                document.getElementById('status').value = 'jelolt';
+            }
+
+            if (transcript.includes('gondolkozik')) {
+                document.getElementById('process').value = '3_htt';
+            } else if (transcript.includes('bemutató') || transcript.includes('látott')) {
+                document.getElementById('process').value = '2_bemutato';
+            } else if (transcript.includes('meghívás') || transcript.includes('meghívtam')) {
+                document.getElementById('process').value = '1_meghivas';
+            }
+
+            document.getElementById('occupation').value = "Egyéb";
+            
+            alert("✅ Az AI meghallgatta és kitöltötte az űrlapot!\n\nEzt hallottam: '" + event.results[0][0].transcript + "'\n\nKérlek, ellenőrizd az adatokat, egészítsd ki, majd kattints a Mentés gombra!");
+        };
+
+        recognition.onend = function() {
+            aiButton.innerHTML = originalText;
+            aiButton.style.background = "linear-gradient(135deg, #104a8e 0%, #00b4db 100%)";
+            aiButton.style.boxShadow = "0 4px 15px rgba(0, 180, 219, 0.4)";
+        };
+
+        recognition.onerror = function(event) {
+            console.error("AI Mikrofon hiba:", event.error);
+            alert("Hiba történt a mikrofon használatakor. Kérlek, engedélyezd a böngészőnek a mikrofonhoz való hozzáférést!");
+            aiButton.innerHTML = originalText;
+            aiButton.style.background = "linear-gradient(135deg, #104a8e 0%, #00b4db 100%)";
+        };
+
+        recognition.start();
+    }
+
+    // --- 2. Adatbázis Változók ---
+    let contacts = [];
+    let currentLang = 'hu'; 
+    let isShared = false;
+
+    // --- 3. Adatok letöltése a szerverről induláskor ---
+    async function loadDataFromServer() {
+        try {
+            const res = await fetch('/api/data', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                contacts = JSON.parse(data.crm_data || '[]');
+                isShared = data.is_shared === 1; 
+                localStorage.setItem('sikerPortalCloud', JSON.stringify(contacts));
+                
+                document.getElementById('editOccupation').innerHTML = document.getElementById('occupation').innerHTML;
+                updateShareBtnUI();
+                applyLanguage();
+                renderContacts();
+            } else {
+                alert("Lejárt a munkamenet. Kérlek, jelentkezz be újra!");
+                logout();
+            }
+        } catch(e) {
+            console.error("Szerver hiba, offline mód használata.");
+            contacts = JSON.parse(localStorage.getItem('sikerPortalCloud')) || [];
+            document.getElementById('editOccupation').innerHTML = document.getElementById('occupation').innerHTML;
+            applyLanguage(); renderContacts();
+        }
+    }
+
+    // --- 4. Felszinkronizálás minden módosításkor ---
+    async function saveAndRender() {
+        localStorage.setItem('sikerPortalCloud', JSON.stringify(contacts));
+        renderContacts();
+        try {
+            await fetch('/api/data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ crm_data: JSON.stringify(contacts) })
+            });
+        } catch(e) { console.error("Offline mód mentés."); }
+    }
+
+    // --- MEGOSZTÁS KEZELÉSE ---
+    function updateShareBtnUI() {
+        const btn = document.getElementById('shareBtn');
+        if(isShared) {
+            btn.style.backgroundColor = '#4caf50'; btn.style.color = 'white'; btn.style.borderColor = '#4caf50';
+            btn.innerText = '👀 Szponzornak megosztva: BE';
+        } else {
+            btn.style.backgroundColor = 'transparent'; btn.style.color = '#104a8e'; btn.style.borderColor = '#104a8e';
+            btn.innerText = '👀 Szponzori rálátás: KI';
+        }
+    }
+
+    async function toggleShare() {
+        isShared = !isShared;
+        updateShareBtnUI(); 
+        try {
+            await fetch('/api/share', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ is_shared: isShared })
+            });
+            alert(isShared ? "A szponzorod mostantól rálát a névlistádra!" : "Megosztás sikeresen visszavonva.");
+        } catch(e) { alert("Hiba történt!"); isShared = !isShared; updateShareBtnUI(); }
+    }
+
+    // --- CSAPAT LOGIKA ---
+    async function openTeamModal() {
+        document.getElementById('teamModal').style.display = 'flex';
+        document.getElementById('teamCrmViewer').style.display = 'none';
+        const container = document.getElementById('teamListContainer');
+        container.innerHTML = 'Keresés az alsóvonaladban...';
+        
+        try {
+            const res = await fetch('/api/team/shared', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (res.ok) {
+                const users = await res.json();
+                if(users.length === 0) {
+                    container.innerHTML = '<i style="color:#d32f2f;">Még egyetlen munkatársad sem osztotta meg veled a listáját.</i>';
+                    return;
+                }
+                container.innerHTML = '';
+                users.forEach(u => {
+                    container.innerHTML += `<button class="btn-outline" style="margin-right:10px; margin-bottom:10px; padding: 10px 15px;" onclick="viewTeamCrm(${u.id})">📂 ${u.name} listája</button>`;
+                });
+            }
+        } catch(e) { container.innerHTML = 'Hiba a kapcsolatban.'; }
+    }
+
+    async function viewTeamCrm(userId) {
+        try {
+            const res = await fetch(`/api/team/shared/${userId}`, { headers: { 'Authorization': 'Bearer ' + token } });
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('teamCrmTitle').innerText = `${data.name} Jelöltjei`;
+                const contacts = JSON.parse(data.crm_data || '[]');
+                const tbody = document.getElementById('teamCrmTableBody');
+                tbody.innerHTML = '';
+                
+                if(contacts.length === 0) tbody.innerHTML = '<tr><td colspan="3" style="padding: 15px; text-align: center;">A lista még üres.</td></tr>';
+                
+                contacts.forEach(c => {
+                    let notesSnippet = (c.notes || []).slice(0, 2).map(n => `- ${n.text}`).join('<br>') || '<i>Nincs bejegyzés</i>';
+                    tbody.innerHTML += `<tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:12px;"><b>${c.name}</b><br><span style="color:#666;">${c.phone || ''}</span></td>
+                        <td style="padding:12px;"><span class="badge" style="background:#104a8e;">${c.status || '-'}</span><br><span style="font-size:11px; color:#555;">${c.process || '-'}</span></td>
+                        <td style="padding:12px;">${notesSnippet}</td>
+                    </tr>`;
+                });
+                document.getElementById('teamCrmViewer').style.display = 'block';
+            }
+        } catch(e) { alert('Hiba a betöltéskor!'); }
+    }
+
+    // --- AZ EDDIGI CRM LOGIKA ---
+    function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
+    function escapeHTML(str) { return (str || '').replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
+
+    function toggleLang() { currentLang = currentLang === 'hu' ? 'en' : 'hu'; applyLanguage(); renderContacts(); }
+    function applyLanguage() {
+        document.getElementById('langBtn').innerText = currentLang === 'hu' ? '🇬🇧 EN / 🇭🇺 HU' : '🇭🇺 HU / 🇬🇧 EN';
+        document.querySelectorAll('.tr').forEach(el => { el.innerHTML = currentLang === 'hu' ? el.getAttribute('data-hu') : el.getAttribute('data-en'); });
+        document.querySelectorAll('.tr-ph').forEach(el => { el.placeholder = currentLang === 'hu' ? el.getAttribute('data-hu-ph') : el.getAttribute('data-en-ph'); });
+    }
+
+    function exportBackup() {
+        if(contacts.length === 0) return alert("Nincs adat!");
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(contacts));
+        const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", `SikerPortal_Mentes_${new Date().toISOString().split('T')[0]}.json`); document.body.appendChild(dl); dl.click(); dl.remove();
+    }
+    function importBackup(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if(Array.isArray(imported)) { contacts = imported; saveAndRender(); alert("A rendszer sikeresen betöltötte és felszinkronizálta a mentésedet!"); }
+            } catch(err) { alert("Hiba történt!"); }
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+    function exportToCSV() {
+        if(contacts.length === 0) return alert("Nincs adat!");
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFFNév;Foglalkozás;Státusz;Folyamat;Telefon;Email;Linkek;Jegyzetek\r\n";
+        contacts.forEach(c => {
+            let linksStr = (c.links || []).map(l => l.label + ": " + l.url).join(" | ");
+            let notesStr = (c.notes || []).map(n => `[${n.dateStr}] ${n.type}: ${n.text}`).join(" || ");
+            let row = [c.name, c.occupation, c.status, c.process, c.phone, c.email, linksStr, notesStr].map(val => `"${(val || '').toString().replace(/"/g, '""')}"`).join(';');
+            csvContent += row + "\r\n";
+        });
+        const dl = document.createElement("a"); dl.setAttribute("href", encodeURI(csvContent)); dl.setAttribute("download", `CRM_Lista_${new Date().toISOString().split('T')[0]}.csv`); document.body.appendChild(dl); dl.click(); dl.remove();
+    }
+
+    function calculateStats() {
+        const now = new Date(); const todayStr = now.toDateString(); const currentMonth = now.getMonth(); const currentYear = now.getFullYear();
+        let stats = { daily: { call: 0, message: 0, meeting: 0 }, monthly: { call: 0, message: 0, meeting: 0 } };
+        contacts.forEach(c => {
+            (c.notes || []).forEach(note => {
+                if(note.type === 'info') return; 
+                const noteDate = new Date(note.timestamp);
+                if (noteDate.toDateString() === todayStr && stats.daily[note.type] !== undefined) stats.daily[note.type]++;
+                if (noteDate.getMonth() === currentMonth && noteDate.getFullYear() === currentYear && stats.monthly[note.type] !== undefined) stats.monthly[note.type]++;
+            });
+        });
+        document.getElementById('dailyCalls').innerText = stats.daily.call; document.getElementById('dailyMsgs').innerText = stats.daily.message; document.getElementById('dailyMeetings').innerText = stats.daily.meeting;
+        document.getElementById('monthlyCalls').innerText = stats.monthly.call; document.getElementById('monthlyMsgs').innerText = stats.monthly.message; document.getElementById('monthlyMeetings').innerText = stats.monthly.meeting;
+    }
+
+    function renderContacts() {
+        const list = document.getElementById('contactList');
+        const sName = document.getElementById('searchName').value.toLowerCase();
+        const sOcc = document.getElementById('searchOcc').value.toLowerCase();
+        const sZip = document.getElementById('searchZip').value.toLowerCase();
+        const fStatus = document.getElementById('filterStatus').value;
+        const fProcess = document.getElementById('filterProcess').value;
+        list.innerHTML = '';
+
+        contacts.forEach(c => {
+            if(fStatus !== 'all' && c.status !== fStatus) return; if(fProcess !== 'all' && c.process !== fProcess) return;
+            const matchName = !sName || c.name.toLowerCase().includes(sName); const matchOcc = !sOcc || (c.occupation || '').toLowerCase().includes(sOcc); const matchZip = !sZip || (c.zip || '').toLowerCase().startsWith(sZip);
+            if(!(matchName && matchOcc && matchZip)) return;
+
+            let links = '<div class="contact-links" style="margin-top:6px;">'; (c.links || []).forEach(link => { links += `<a href="${link.url}" target="_blank">🌐 ${link.label}</a>`; }); links += '</div>';
+            let phoneLink = c.phone ? `<a href="tel:${c.phone}" style="color:#104a8e; text-decoration:none; font-weight:bold;">📞 ${c.phone}</a>` : `<span style="color:#999;">📞 -</span>`;
+            let emailLink = c.email ? `<a href="mailto:${c.email}" style="color:#104a8e; text-decoration:none; font-weight:bold;">📧 Email</a>` : `<span style="color:#999;">📧 -</span>`;
+            let btnProfile = currentLang === 'hu' ? '📖 Adatlap & Jegyzetek' : '📖 Profile & Notes'; let btnCal = currentLang === 'hu' ? '📅 Naptár' : '📅 Calendar'; let btnEdit = currentLang === 'hu' ? '✏️ Szerkesztés' : '✏️ Edit'; let btnDel = currentLang === 'hu' ? '🗑️ Törlés' : '🗑️ Delete'; let emptyMsg = currentLang === 'hu' ? 'Nincs megadva' : 'Not provided';
+
+            let actionBtns = `<button class="btn-small btn-green" onclick="openProfile('${c.id}')" style="font-size: 12px; padding: 10px 12px; margin-bottom: 8px; width: 100%;">${btnProfile}</button><br><button class="btn-small btn-yellow" onclick="openTaskModal('${c.id}')">${btnCal}</button><button class="btn-small btn-outline" onclick="openEditContact('${c.id}')">${btnEdit}</button><button class="btn-small btn-red" onclick="deleteContact('${c.id}')">${btnDel}</button>`;
+            let dropdowns = `<select onchange="changeAttr('${c.id}', 'status', this.value)" style="padding:8px; font-size:12px; margin-bottom:8px; width: 100%; border-radius: 4px; border: 1px solid #104a8e;"><option value="jelolt" ${c.status==='jelolt'?'selected':''}>Jelölt / Prospect</option><option value="vasarlo" ${c.status==='vasarlo'?'selected':''}>Vásárló / Customer</option><option value="partner" ${c.status==='partner'?'selected':''}>Üzleti partner</option><option value="ful" ${c.status==='ful'?'selected':''}>FÜL / Pending</option></select><select onchange="changeAttr('${c.id}', 'process', this.value)" style="padding:8px; font-size:12px; width: 100%; border-radius: 4px; border: 1px solid #104a8e;"><option value="0_jelolt" ${c.process==='0_jelolt'?'selected':''}>0. Jelölt</option><option value="1_meghivas" ${c.process==='1_meghivas'?'selected':''}>1. Meghívás</option><option value="2_bemutato" ${c.process==='2_bemutato'?'selected':''}>2. Bemutató</option><option value="3_htt" ${c.process==='3_htt'?'selected':''}>3. HTT</option><option value="4_belepes" ${c.process==='4_belepes'?'selected':''}>4. Belépés/Vás.</option><option value="5_elinditas" ${c.process==='5_elinditas'?'selected':''}>5. Elindítás</option><option value="6_munkatars" ${c.process==='6_munkatars'?'selected':''}>6. Munkatárs</option></select>`;
+
+            list.innerHTML += `<tr><td style="background: white;"><strong style="font-size: 16px; color: #104a8e;">${c.name}</strong><br><span style="font-size:12px; color:#666; font-weight: bold; display:inline-block; margin-bottom:4px;">${c.occupation || emptyMsg}</span><br><span style="font-size:13px; color:#444;">${phoneLink} | ${emailLink}</span><br>${links}</td><td style="background: #fdfdfd;">${dropdowns}</td><td style="background: white;">${actionBtns}</td></tr>`;
+        });
+        calculateStats(); renderCalendars();
+    }
+
+    function openProfile(id) {
+        const c = contacts.find(x => x.id === id); document.getElementById('currentProfileId').value = c.id; document.getElementById('profileName').innerText = c.name; document.getElementById('profOcc').innerText = c.occupation || "-";
+        const statOpt = document.querySelector(`#status option[value="${c.status}"]`); document.getElementById('profStatus').innerText = statOpt ? statOpt.innerText : c.status; const procOpt = document.querySelector(`#process option[value="${c.process}"]`); document.getElementById('profProcess').innerText = procOpt ? procOpt.innerText : c.process;
+        document.getElementById('profPhone').innerHTML = c.phone ? `<a href="tel:${c.phone}" style="color:#104a8e; font-weight:bold;">${c.phone}</a>` : "-"; document.getElementById('profEmail').innerHTML = c.email ? `<a href="mailto:${c.email}" style="color:#104a8e; font-weight:bold;">${c.email}</a>` : "-";
+        let linkStr = (c.links || []).map(l => `<a href="${l.url}" target="_blank" style="color:#104a8e; font-weight:bold;">${l.label}</a>`).join(', '); document.getElementById('profLinks').innerHTML = linkStr || "-";
+        let addr = [c.zip, c.city, c.street, c.house].filter(Boolean).join(' '); document.getElementById('profileAddress').innerText = addr || "-"; document.getElementById('profileGroups').innerText = (c.groups && c.groups.length > 0) ? c.groups.join(', ') : "-";
+        renderProfileNotes(c); document.getElementById('profileModal').style.display = 'flex';
+    }
+
+    function renderProfileNotes(c) {
+        const container = document.getElementById('profileNotes'); container.innerHTML = '';
+        if (!c.notes || c.notes.length === 0) { container.innerHTML = '<i style="color:#888;">Nincs még rögzített információ.</i>'; return; }
+        let infos = c.notes.filter(n => n.type === 'info'); let others = c.notes.filter(n => n.type !== 'info');
+        infos.forEach(note => { container.innerHTML += `<div class="note-item pinned"><strong>ℹ️ INFÓ:</strong><br>${escapeHTML(note.text)}<br><button class="btn-small" style="background:transparent; color:#104a8e; border:none; padding:0; margin-top:5px; cursor:pointer; font-weight:bold;" onclick="openEditNote('${c.id}', '${note.id}')">[Szerkeszt]</button></div>`; });
+        others.forEach(note => { let typeName = note.type === 'call' ? 'Hívás' : (note.type === 'message' ? 'Üzenet' : 'Találkozó'); container.innerHTML += `<div class="note-item"><span class="badge" style="background:#104a8e;">${typeName}</span> <strong style="color:#333;">${note.dateStr}:</strong><br><span style="color:#555;">${escapeHTML(note.text)}</span></div>`; });
+    }
+    
+    function openNoteModalFromProfile() { openNoteModal(document.getElementById('currentProfileId').value); }
+    function openEditFromProfile() { closeModal('profileModal'); openEditContact(document.getElementById('currentProfileId').value); }
+
+    document.getElementById('crmForm').addEventListener('submit', function(e) {
+        e.preventDefault(); let selectedGroups = []; document.querySelectorAll('.new-group-cb:checked').forEach(cb => selectedGroups.push(cb.value)); let initialLinks = []; let firstLink = document.getElementById('fb').value; if (firstLink) initialLinks.push({ label: 'Közösségi profil', url: firstLink });
+        contacts.push({ id: generateId(), name: document.getElementById('name').value, status: document.getElementById('status').value, process: document.getElementById('process').value, occupation: document.getElementById('occupation').value, phone: document.getElementById('phone').value, email: document.getElementById('email').value, zip: document.getElementById('zip').value, city: document.getElementById('city').value, street: document.getElementById('street').value, house: document.getElementById('house').value, groups: selectedGroups, links: initialLinks, notes: [], tasks: [] });
+        saveAndRender(); this.reset();
+    });
+
+    function openEditContact(id) {
+        const c = contacts.find(x => x.id === id); document.getElementById('editContactId').value = c.id; document.getElementById('editName').value = c.name; document.getElementById('editOccupation').value = c.occupation || ''; document.getElementById('editPhone').value = c.phone || ''; document.getElementById('editEmail').value = c.email || ''; document.getElementById('editZip').value = c.zip || ''; document.getElementById('editCity').value = c.city || ''; document.getElementById('editStreet').value = c.street || ''; document.getElementById('editHouse').value = c.house || ''; document.querySelectorAll('.edit-group-cb').forEach(cb => { cb.checked = (c.groups || []).includes(cb.value); });
+        renderEditLinks(); document.getElementById('editContactModal').style.display = 'flex';
+    }
+    function renderEditLinks() {
+        const id = document.getElementById('editContactId').value; const c = contacts.find(x => x.id === id); const container = document.getElementById('existingLinksList'); container.innerHTML = '';
+        if(!c.links || c.links.length === 0) return;
+        c.links.forEach((link, index) => { container.innerHTML += `<div style="margin-bottom: 5px; padding: 8px; background: white; border: 1px solid #ccc; border-radius: 4px; display: flex; justify-content: space-between; align-items:center;"><span><strong>${link.label}:</strong> <a href="${link.url}" target="_blank" style="color:#104a8e; text-decoration:none;">${link.url}</a></span><button type="button" onclick="removeDynamicLink(${index})" style="background:none; border:none; color:red; cursor:pointer; font-size:16px;">✖</button></div>`; });
+    }
+    function addDynamicLink() { const c = contacts.find(x => x.id === document.getElementById('editContactId').value); const url = document.getElementById('newLinkUrl').value; if(!url) return; if(!c.links) c.links = []; c.links.push({ label: document.getElementById('newLinkLabel').value || 'Link', url: url }); document.getElementById('newLinkLabel').value = ''; document.getElementById('newLinkUrl').value = ''; saveAndRender(); renderEditLinks(); }
+    function removeDynamicLink(index) { contacts.find(x => x.id === document.getElementById('editContactId').value).links.splice(index, 1); saveAndRender(); renderEditLinks(); }
+    function saveEditedContact() {
+        const c = contacts.find(x => x.id === document.getElementById('editContactId').value);
+        c.name = document.getElementById('editName').value; c.occupation = document.getElementById('editOccupation').value; c.phone = document.getElementById('editPhone').value; c.email = document.getElementById('editEmail').value; c.zip = document.getElementById('editZip').value; c.city = document.getElementById('editCity').value; c.street = document.getElementById('editStreet').value; c.house = document.getElementById('editHouse').value;
+        let selectedGroups = []; document.querySelectorAll('.edit-group-cb:checked').forEach(cb => selectedGroups.push(cb.value)); c.groups = selectedGroups;
+        saveAndRender(); closeModal('editContactModal'); if(document.getElementById('profileModal').style.display === 'flex') openProfile(c.id);
+    }
+    function deleteContact(id) { if(confirm(currentLang === 'hu' ? 'Biztosan törlöd?' : 'Are you sure?')) { contacts = contacts.filter(x => x.id !== id); saveAndRender(); } }
+    function changeAttr(id, key, val) { contacts.find(x => x.id === id)[key] = val; saveAndRender(); }
+
+    function openNoteModal(cId) { document.getElementById('currentContactIdForNote').value = cId; document.getElementById('editNoteId').value = ''; document.getElementById('noteText').value = ''; document.getElementById('noteModal').style.display = 'flex'; }
+    function openEditNote(cId, nId) { document.getElementById('currentContactIdForNote').value = cId; document.getElementById('editNoteId').value = nId; document.getElementById('noteType').value = 'info'; const c = contacts.find(x => x.id === cId); const note = c.notes.find(x => x.id === nId); document.getElementById('noteText').value = note ? note.text : ''; document.getElementById('noteModal').style.display = 'flex'; }
+    function saveNote() {
+        const cId = document.getElementById('currentContactIdForNote').value; const nId = document.getElementById('editNoteId').value; const text = document.getElementById('noteText').value; if(!text) return;
+        const c = contacts.find(x => x.id === cId);
+        if (nId) { c.notes.find(x => x.id === nId).text = text; } else { const now = new Date(); c.notes.unshift({ id: generateId(), timestamp: now.getTime(), type: document.getElementById('noteType').value, text: text, dateStr: now.toLocaleDateString() + " " + now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }); }
+        saveAndRender(); closeModal('noteModal'); if(document.getElementById('profileModal').style.display === 'flex') renderProfileNotes(c);
+    }
+
+    function openTaskModal(cId) { document.getElementById('currentContactIdForTask').value = cId; document.getElementById('taskDate').value = new Date().toISOString().split('T')[0]; document.getElementById('taskTime').value = "12:00"; document.getElementById('taskModal').style.display = 'flex'; }
+    function saveTask() { const c = contacts.find(x => x.id === document.getElementById('currentContactIdForTask').value); c.tasks = c.tasks || []; c.tasks.push({ id: generateId(), date: document.getElementById('taskDate').value, time: document.getElementById('taskTime').value, type: document.getElementById('taskType').value, desc: document.getElementById('taskDesc').value }); saveAndRender(); closeModal('taskModal'); }
+    function openGoogleCalendar() { const c = contacts.find(x => x.id === document.getElementById('currentContactIdForTask').value); const date = document.getElementById('taskDate').value.replace(/-/g, ''); const time = document.getElementById('taskTime').value.replace(':', '') + '00'; const datetime = `${date}T${time}`; const title = encodeURIComponent(`CRM: ${c.name} - ${document.getElementById('taskType').value}`); const details = encodeURIComponent(document.getElementById('taskDesc').value); window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${datetime}/${datetime}&details=${details}`, '_blank'); saveTask(); }
+    function deleteTask(cId, tId) { if(confirm(currentLang === 'hu' ? 'Törlöd?' : 'Are you sure?')) { contacts.find(x => x.id === cId).tasks = contacts.find(x => x.id === cId).tasks.filter(x => x.id !== tId); saveAndRender(); } }
+    function openProfileFromCalendar(cId) { closeModal('fullCalendarModal'); openProfile(cId); }
+
+    function renderCalendars() {
+        const d = new Date(); const todayStr = d.toISOString().split('T')[0]; d.setDate(d.getDate() - 1); const yestStr = d.toISOString().split('T')[0]; d.setDate(d.getDate() + 2); const tmrwStr = d.toISOString().split('T')[0];
+        let tasks = []; contacts.forEach(c => (c.tasks || []).forEach(t => tasks.push({...t, cId: c.id, cName: c.name}))); tasks.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+        let yestH = '', todayH = '', tmrwH = '', fullH = '', curGroup = '';
+        tasks.forEach(t => {
+            let card = `<div class="task-item"><span class="task-time">${t.time}</span> - <strong style="cursor:pointer; color:#104a8e; text-decoration:underline;" onclick="openProfileFromCalendar('${t.cId}')">${t.cName}</strong><br>${t.type}: ${t.desc} <button onclick="deleteTask('${t.cId}', '${t.id}')" style="background:none; border:none; color:#d32f2f; float:right; cursor:pointer; font-weight:bold;">✖</button></div>`;
+            if(t.date === yestStr) yestH += card; if(t.date === todayStr) todayH += card; if(t.date === tmrwStr) tmrwH += card;
+            if(t.date !== curGroup) { fullH += `<h4 style="margin-top: 15px; color: #104a8e; border-bottom: 1px solid #eee; padding-bottom: 5px;">${t.date}</h4>`; curGroup = t.date; } fullH += `<div class="task-item" style="display:flex; justify-content:space-between; align-items:center;"><div><span class="task-time">${t.time}</span> | <strong style="cursor:pointer; color:#104a8e; text-decoration:underline;" onclick="openProfileFromCalendar('${t.cId}')">${t.cName}</strong> | ${t.type}: ${t.desc}</div><button onclick="deleteTask('${t.cId}', '${t.id}')" class="btn-small btn-red" style="margin:0;">Törlés</button></div>`;
+        });
+        document.getElementById('miniCalendar').innerHTML = `<div class="cal-day"><h4 class="tr" style="color:#104a8e; margin-top:0;" data-hu="⬅️ Tegnap" data-en="⬅️ Yesterday">⬅️ Tegnap</h4>${yestH || '-'}</div><div class="cal-day today"><h4 class="tr" style="color:#f57f17; margin-top:0;" data-hu="🎯 MA" data-en="🎯 TODAY">🎯 MA</h4>${todayH || '-'}</div><div class="cal-day"><h4 class="tr" style="color:#104a8e; margin-top:0;" data-hu="➡️ Holnap" data-en="➡️ Tomorrow">➡️ Holnap</h4>${tmrwH || '-'}</div>`; document.getElementById('fullCalendarList').innerHTML = fullH || '<p style="color:#888;">Nincs rögzített emlékeztető.</p>';
+    }
+    
+    function openFullCalendarModal() { document.getElementById('fullCalendarModal').style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    // RENDSZER INDÍTÁSA
+    loadDataFromServer();
+</script>
+
+</body>
+</html>
