@@ -20,7 +20,7 @@
         .tile { background: white; border-radius: 6px; padding: 40px 30px; text-decoration: none; color: #333; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: all 0.3s ease; border-bottom: 3px solid transparent; display: flex; flex-direction: column; align-items: center; border: 1px solid #eee; }
         .tile:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); border-bottom: 3px solid #104a8e; }
         .tile.admin:hover { border-bottom: 3px solid #c62828; }
-        .tile.admin { display: none; }
+        .tile.admin { display: none; } /* Alapból rejtve van */
 
         .icon-circle { width: 70px; height: 70px; background-color: #104a8e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; font-size: 30px; color: #ffffff; box-shadow: 0 5px 15px rgba(16, 74, 142, 0.2); }
         .tile.admin .icon-circle { background-color: #c62828; box-shadow: 0 5px 15px rgba(198, 40, 40, 0.2); }
@@ -32,12 +32,13 @@
 <body>
 
     <script>
-        const token = localStorage.getItem('sikerPortalToken'); // ÁTÍRVA
+        const token = localStorage.getItem('sikerPortalToken');
         if (!token) window.location.href = 'kapu.html';
         
         function logout() {
-            localStorage.removeItem('sikerPortalToken'); // ÁTÍRVA
-            localStorage.removeItem('sikerPortalUser'); // ÁTÍRVA
+            localStorage.removeItem('sikerPortalToken'); 
+            localStorage.removeItem('sikerPortalUser'); 
+            localStorage.removeItem('sikerPortalRole'); // Kijelentkezéskor töröljük a rangot is!
             window.location.href = 'kapu.html';
         }
     </script>
@@ -66,20 +67,16 @@
     </div>
 
     <script>
+        // Felhasználónév betöltése a memóriából
         document.getElementById('userName').innerText = localStorage.getItem('sikerPortalUser') || 'Munkatárs';
 
-        try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-
-            const userData = JSON.parse(jsonPayload);
-            if (userData.role === 'admin') {
-                document.getElementById('adminTile').style.display = 'flex';
-            }
-        } catch(e) { console.error("Hiba", e); }
+        // ADMIN JOG ELLENŐRZÉSE - Az új, okos módszerrel
+        const userRole = localStorage.getItem('sikerPortalRole');
+        
+        // Ha a rang 'admin', akkor megjelenítjük a csempét
+        if (userRole === 'admin') {
+            document.getElementById('adminTile').style.display = 'flex';
+        }
     </script>
 
 </body>

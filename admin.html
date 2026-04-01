@@ -62,7 +62,6 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Név</th>
                         <th>E-mail</th>
                         <th>Kód (FBO ID)</th>
@@ -98,18 +97,19 @@
                         ? '<span class="badge admin">Admin</span>' 
                         : '<span class="badge user">Munkatárs</span>';
                         
-                    const statusBadge = user.is_approved === 1 
+                    // A MongoDB-s változatban az is_approved is Boolean lesz
+                    const statusBadge = user.is_approved 
                         ? '<span class="badge approved">Jóváhagyva</span>' 
                         : '<span class="badge pending">Függőben</span>';
 
                     let actions = '';
                     if (user.role !== 'admin') {
-                        if (user.is_approved === 0) {
-                            actions += `<button class="btn-action btn-approve" onclick="approveUser(${user.id})">Jóváhagyás</button>`;
+                        if (!user.is_approved) {
+                            actions += `<button class="btn-action btn-approve" onclick="approveUser('${user._id}')">Jóváhagyás</button>`;
                         }
                         actions += `
-                            <button class="btn-action btn-make-admin" onclick="makeAdmin(${user.id})">Adminná tesz</button>
-                            <button class="btn-action btn-delete" onclick="deleteUser(${user.id})">Törlés</button>
+                            <button class="btn-action btn-make-admin" onclick="makeAdmin('${user._id}')">Adminná tesz</button>
+                            <button class="btn-action btn-delete" onclick="deleteUser('${user._id}')">Törlés</button>
                         `;
                     } else {
                         actions = '<i>(Védett fiók)</i>';
@@ -117,10 +117,9 @@
 
                     tbody.innerHTML += `
                         <tr>
-                            <td>#${user.id}</td>
                             <td><b>${user.name}</b></td>
-                            <td>${user.email}</td>
-                            <td>${user.fbo_id}</td>
+                            <td>${user.username}</td>
+                            <td>${user.fbo_id || '-'}</td>
                             <td>${user.sponsor_fbo || '-'}</td>
                             <td>${roleBadge}</td>
                             <td>${statusBadge}</td>

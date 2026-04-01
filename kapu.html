@@ -75,7 +75,6 @@
 </div>
 
 <script>
-    // Szem ikon funkció
     function toggleVisibility(inputId, btnElement) {
         const inputField = document.getElementById(inputId);
         if (inputField.type === "password") {
@@ -105,7 +104,6 @@
     async function handleRegister(e) {
         e.preventDefault();
         
-        // MongoDB szerver "username"-et vár, ezért oda mapeljük az emailt!
         const body = {
             name: document.getElementById('regName').value, 
             username: document.getElementById('regEmail').value, 
@@ -130,7 +128,6 @@
             }
         } catch (err) { 
             showAlert("Szerver hálózati hiba!", "error"); 
-            console.error(err);
         }
     }
 
@@ -157,13 +154,13 @@
                 localStorage.setItem('sikerPortalToken', data.token); 
                 localStorage.setItem('sikerPortalUser', data.name); 
                 
-                // Mivel az eredeti kódod a hub.html-re vitt bejelentkezés után, azt itt megtartottam.
-                // Ha mégis a crm.html a főoldal, írd át crm.html-re!
+                // ITT MENTJÜK EL AZ ADMIN RANGOT A BÖNGÉSZŐBE!
+                localStorage.setItem('sikerPortalRole', data.role); 
+                
                 setTimeout(() => window.location.href = "hub.html", 1000);
             }
         } catch (err) { 
             showAlert("Szerver hálózati hiba!", "error"); 
-            console.error(err);
         }
     }
 </script>
