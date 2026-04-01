@@ -214,11 +214,10 @@ app.post('/api/ai-parse', authenticateToken, async (req, res) => {
             return res.status(500).json({ error: 'Nincs beállítva a Gemini API kulcs a szerveren!' });
         }
 
-        // Itt adjuk ki a szigorú parancsot az AI-nak
         const prompt = `Légy szíves nyerd ki a következő magyar nyelvű szövegből a CRM adatokat, és KIZÁRÓLAG egy érvényes JSON objektumot adj vissza (ne használj markdown formázást, se \`\`\`json jelölést, csak a tiszta JSON-t), a következő kulcsokkal: "name" (név), "email" (email cím), "phone" (telefonszám), "notes" (minden egyéb hasznos megjegyzés). Ha valamelyik adat hiányzik a szövegből, hagyd az értékét üresen (""). Szöveg: "${rawText}"`;
 
-        // JAVÍTVA: A Google legstabilabb modelljét hívjuk meg (gemini-1.5-flash-latest)
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+        // A GOLYÓÁLLÓ, KLASSZIKUS MODELL: gemini-pro
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -234,11 +233,10 @@ app.post('/api/ai-parse', authenticateToken, async (req, res) => {
 
         const aiText = data.candidates[0].content.parts[0].text;
         
-        // Letisztítjuk a szöveget, hátha a Gemini mégis tesz bele formázást
         const cleanJsonStr = aiText.replace(/```json/gi, '').replace(/```/g, '').trim();
         const parsedData = JSON.parse(cleanJsonStr);
 
-        res.json(parsedData); // Visszaküldjük a tökéletes adatokat a weboldalnak!
+        res.json(parsedData); 
     } catch (error) {
         console.error('AI Hiba:', error);
         res.status(500).json({ error: 'Hiba történt a mesterséges intelligencia feldolgozása során.' });
