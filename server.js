@@ -217,7 +217,8 @@ app.post('/api/ai-parse', authenticateToken, async (req, res) => {
         // Itt adjuk ki a szigorú parancsot az AI-nak
         const prompt = `Légy szíves nyerd ki a következő magyar nyelvű szövegből a CRM adatokat, és KIZÁRÓLAG egy érvényes JSON objektumot adj vissza (ne használj markdown formázást, se \`\`\`json jelölést, csak a tiszta JSON-t), a következő kulcsokkal: "name" (név), "email" (email cím), "phone" (telefonszám), "notes" (minden egyéb hasznos megjegyzés). Ha valamelyik adat hiányzik a szövegből, hagyd az értékét üresen (""). Szöveg: "${rawText}"`;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        // JAVÍTVA: A Google legstabilabb modelljét hívjuk meg (gemini-1.5-flash-latest)
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
