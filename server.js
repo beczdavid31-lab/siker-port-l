@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
     fbo_id: { type: String },
     sponsor_fbo: { type: String },
     role: { type: String, default: 'user' }, 
-    is_approved: { type: Boolean, default: false }, // Ez a kulcs a belépéshez!
+    is_approved: { type: Boolean, default: false }, 
     crm_data: { type: String, default: '[]' },
     is_shared: { type: Boolean, default: false }
 });
@@ -71,7 +71,6 @@ const authenticateAdmin = async (req, res, next) => {
 
 // --- 4. ALAP VÉGPONTOK (API) ---
 
-// Regisztráció
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password, name, fbo_id, sponsor_fbo } = req.body;
@@ -80,7 +79,7 @@ app.post('/api/register', async (req, res) => {
         const userCount = await User.countDocuments();
         
         const userRole = (userCount === 0) ? 'admin' : 'user';
-        const isApproved = (userCount === 0) ? true : false; // Az első admin egyből jóvá van hagyva
+        const isApproved = (userCount === 0) ? true : false; 
 
         const user = new User({ 
             username, 
@@ -95,12 +94,10 @@ app.post('/api/register', async (req, res) => {
         await user.save();
         res.status(201).json({ message: 'Sikeres regisztráció! Fiókod jóváhagyásra vár.' });
     } catch (error) {
-        console.error(error);
         res.status(400).json({ error: 'A felhasználónév már foglalt, vagy hiba történt.' });
     }
 });
 
-// Bejelentkezés - ITT A LAKAT! 🔒
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -110,11 +107,9 @@ app.post('/api/login', async (req, res) => {
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(400).json({ error: 'Hibás jelszó.' });
         
-        // --- A SZIGORÚ ELLENŐRZÉS ---
         if (!user.is_approved) {
             return res.status(403).json({ error: 'A fiókod még jóváhagyásra vár! Kérlek, jelezd a szponzorodnak vagy egy Adminnak.' });
         }
-        // ------------------------------
         
         const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET);
         res.json({ token, name: user.name, role: user.role });
@@ -123,7 +118,6 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// CRM Adatok Lekérése
 app.get('/api/data', authenticateToken, async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
@@ -133,7 +127,6 @@ app.get('/api/data', authenticateToken, async (req, res) => {
     }
 });
 
-// CRM Adatok Mentése
 app.post('/api/data', authenticateToken, async (req, res) => {
     try {
         await User.findByIdAndUpdate(req.user.id, { crm_data: req.body.crm_data });
@@ -143,7 +136,6 @@ app.post('/api/data', authenticateToken, async (req, res) => {
     }
 });
 
-// Megosztás beállítása
 app.post('/api/share', authenticateToken, async (req, res) => {
     try {
         await User.findByIdAndUpdate(req.user.id, { is_shared: req.body.is_shared });
@@ -153,7 +145,6 @@ app.post('/api/share', authenticateToken, async (req, res) => {
     }
 });
 
-// Csapat lekérése
 app.get('/api/team/shared', authenticateToken, async (req, res) => {
     try {
         const users = await User.find({ is_shared: true, _id: { $ne: req.user.id } }, '_id name');
@@ -164,7 +155,6 @@ app.get('/api/team/shared', authenticateToken, async (req, res) => {
     }
 });
 
-// Egy adott csapattag lekérése
 app.get('/api/team/shared/:id', authenticateToken, async (req, res) => {
     try {
         const targetUser = await User.findById(req.params.id);
@@ -178,7 +168,6 @@ app.get('/api/team/shared/:id', authenticateToken, async (req, res) => {
 });
 
 // --- 5. ADMIN VÉGPONTOK ---
-
 app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
     try {
         const users = await User.find({}, '-password'); 
@@ -215,9 +204,49 @@ app.delete('/api/admin/user/:id', authenticateAdmin, async (req, res) => {
     }
 });
 
+// --- 6. AI ASSZISZTENS VÉGPONT (GEMINI INTEGRÁCIÓ) 🤖 ---
+app.post('/api/ai-parse', authenticateToken, async (req, res) => {
+    try {
+        const { rawText } = req.body;
+        const apiKey = process.env.GEMINI_API_KEY;
+
+        if (!apiKey) {
+            return res.status(500).json({ error: 'Nincs beállítva a Gemini API kulcs a szerveren!' });
+        }
+
+        // Itt adjuk ki a szigorú parancsot az AI-nak
+        const prompt = `Légy szíves nyerd ki a következő magyar nyelvű szövegből a CRM adatokat, és KIZÁRÓLAG egy érvényes JSON objektumot adj vissza (ne használj markdown formázást, se \`\`\`json jelölést, csak a tiszta JSON-t), a következő kulcsokkal: "name" (név), "email" (email cím), "phone" (telefonszám), "notes" (minden egyéb hasznos megjegyzés). Ha valamelyik adat hiányzik a szövegből, hagyd az értékét üresen (""). Szöveg: "${rawText}"`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error.message);
+        }
+
+        const aiText = data.candidates[0].content.parts[0].text;
+        
+        // Letisztítjuk a szöveget, hátha a Gemini mégis tesz bele formázást
+        const cleanJsonStr = aiText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        const parsedData = JSON.parse(cleanJsonStr);
+
+        res.json(parsedData); // Visszaküldjük a tökéletes adatokat a weboldalnak!
+    } catch (error) {
+        console.error('AI Hiba:', error);
+        res.status(500).json({ error: 'Hiba történt a mesterséges intelligencia feldolgozása során.' });
+    }
+});
+
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'kapu.html')));
 
-// --- 6. SZERVER INDÍTÁSA ---
+// --- 7. SZERVER INDÍTÁSA ---
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`🚀 Szerver sikeresen elindult a ${PORT}-es porton!`);

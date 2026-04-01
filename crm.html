@@ -34,7 +34,7 @@
         .btn-small { padding: 6px 10px; font-size: 11px; margin-right: 4px; margin-bottom: 4px; }
         
         /* AI Gomb extra stílus */
-        .btn-ai { background: linear-gradient(135deg, #104a8e 0%, #00b4db 100%); color: white; font-size: 16px; padding: 15px; width: 100%; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 180, 219, 0.4); border: none; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; transition: transform 0.2s; }
+        .btn-ai { background: linear-gradient(135deg, #104a8e 0%, #00b4db 100%); color: white; font-size: 14px; padding: 12px; width: 100%; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 180, 219, 0.4); border: none; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; transition: transform 0.2s; }
         .btn-ai:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 180, 219, 0.6); }
 
         .dashboard-container { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -127,10 +127,15 @@
     <div class="card" style="border-top: 4px solid #104a8e;">
         <h2 class="tr" data-hu="Új Kontakt Felvétele" data-en="Add New Contact">Új Kontakt Felvétele</h2>
         
-        <button type="button" class="btn-ai" onclick="startAIDictation()">
-            🎙️ AI Hangalapú Adatbevitel (Diktálás)
-        </button>
-
+        <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 2px solid #bbdefb;">
+            <h3 style="margin-top:0; color: #1565c0; display:flex; justify-content:space-between; align-items:center;">
+                🧠 AI Szöveg Elemző Asszisztens
+                <button type="button" class="btn-ai" onclick="startAIDictation()" style="width:auto; padding:8px 15px; margin:0; font-size:12px;">🎙️ Hangos Diktálás</button>
+            </h3>
+            <p style="font-size: 13px; color: #0d47a1; margin-bottom: 10px;">Illeszd be ide a nyers, hadart szöveget (pl. egy Facebook beszélgetés kivonatát), a mesterséges intelligencia pedig kibogozza, és automatikusan kitölti alatta az űrlapot!</p>
+            <textarea id="aiRawText" rows="3" style="width: 100%; margin-bottom: 10px;" placeholder='Pl.: "Beszéltem ma a Kovács Pistivel, nagyon érdekli az üzlet, a száma 06301234567, az emailje pisti@pelda.hu"'></textarea>
+            <button type="button" id="aiAnalyzeBtn" class="btn-ai" onclick="analyzeTextWithAI()" style="margin-bottom: 0;">✨ Szöveg Elemzése és Űrlap Kitöltése</button>
+        </div>
         <form id="crmForm">
             <div class="form-row">
                 <input type="text" id="name" class="tr-ph" data-hu-ph="Név *" data-en-ph="Name *" placeholder="Név *" required>
@@ -152,6 +157,9 @@
                 <input type="email" id="email" class="tr-ph" data-hu-ph="E-mail cím" data-en-ph="Email Address" placeholder="E-mail cím">
                 <input type="url" id="fb" class="tr-ph" data-hu-ph="Elsődleges közösségi link (pl. Facebook)" data-en-ph="Primary Social Link" placeholder="Elsődleges közösségi link (pl. Facebook)">
             </div>
+            
+            <textarea id="newContactNotes" rows="2" style="width: 100%; margin-bottom: 15px;" placeholder="További jegyzetek, információk (Ide kerül az AI által kinyert extra szöveg is)..."></textarea>
+
             <div class="form-row address-group">
                 <input type="text" id="zip" class="tr-ph" data-hu-ph="Irányítószám" data-en-ph="Zip Code" placeholder="Irányítószám" style="max-width: 120px;">
                 <input type="text" id="city" class="tr-ph" data-hu-ph="Város" data-en-ph="City" placeholder="Város">
@@ -350,10 +358,62 @@
     function logout() {
         localStorage.removeItem('sikerPortalToken');
         localStorage.removeItem('sikerPortalUser');
+        localStorage.removeItem('sikerPortalRole');
         window.location.href = 'kapu.html';
     }
 
-    // --- IGAZI AI HANGALAPÚ ADATBEVITEL ---
+    // --- 🤖 IGAZI GEMINI AI SZÖVEGFELDOLGOZÓ (ÚJ) ---
+    async function analyzeTextWithAI() {
+        const rawText = document.getElementById('aiRawText').value;
+        if (!rawText.trim()) {
+            alert("Kérlek, írj be vagy illessz be valamilyen szöveget az elemzéshez!");
+            return;
+        }
+
+        const aiBtn = document.getElementById('aiAnalyzeBtn');
+        const originalHtml = aiBtn.innerHTML;
+        aiBtn.innerHTML = "⏳ Gemini AI Gondolkodik...";
+        aiBtn.disabled = true;
+
+        try {
+            const res = await fetch('/api/ai-parse', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ rawText })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || "Hiba az elemzés során.");
+            }
+
+            // Automatikus kitöltés
+            if (data.name) document.getElementById('name').value = data.name;
+            if (data.email) document.getElementById('email').value = data.email;
+            if (data.phone) document.getElementById('phone').value = data.phone;
+            if (data.notes) document.getElementById('newContactNotes').value = data.notes;
+
+            // Ha nincs státusz, beállítunk egy alapértelmezettet
+            if (!document.getElementById('status').value) document.getElementById('status').value = 'jelolt';
+            if (!document.getElementById('process').value) document.getElementById('process').value = '0_jelolt';
+            if (!document.getElementById('occupation').value) document.getElementById('occupation').value = 'Egyéb';
+
+            alert("✅ Az AI sikeresen kinyerte az adatokat! Kérlek ellenőrizd, és kattints a 'Személy Hozzáadása' gombra.");
+            document.getElementById('aiRawText').value = ''; 
+        } catch (error) {
+            console.error("AI Error:", error);
+            alert("❌ " + error.message);
+        } finally {
+            aiBtn.innerHTML = originalHtml;
+            aiBtn.disabled = false;
+        }
+    }
+
+    // --- DIKTÁLÓ FUNKCIÓ (Megtartva) ---
     function startAIDictation() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
@@ -366,69 +426,21 @@
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
 
-        const aiButton = document.querySelector('.btn-ai');
-        const originalText = aiButton.innerHTML;
+        const aiBox = document.getElementById('aiRawText');
 
         recognition.onstart = function() {
-            aiButton.innerHTML = "🔴 HALLGATOM... Mondd az adatokat!";
-            aiButton.style.background = "linear-gradient(135deg, #d32f2f 0%, #ff5252 100%)";
-            aiButton.style.boxShadow = "0 4px 15px rgba(211, 47, 47, 0.6)";
+            aiBox.value = "🔴 HALLGATOM... Mondd a szöveget!";
         };
 
         recognition.onresult = function(event) {
-            const transcript = event.results[0][0].transcript.toLowerCase();
-            aiButton.innerHTML = "⏳ AI Elemzés és Kitöltés...";
-            
-            let nameMatch = transcript.match(/(?:neve|hívják|jelöltem)\s+([a-záéíóöőúüű]+\s+[a-záéíóöőúüű]+)/i);
-            if (nameMatch) {
-                const nameParts = nameMatch[1].split(' ');
-                const capitalizedName = nameParts.map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                document.getElementById('name').value = capitalizedName;
-            }
-
-            let phoneMatch = transcript.match(/(?:száma|telefon|telefonszáma)[\s:]*([\d\s\+\-]+)/i);
-            if (!phoneMatch) phoneMatch = transcript.match(/(\+?36|06)[\s\-]?\d{1,2}[\s\-]?\d{3}[\s\-]?\d{3,4}/);
-            if (phoneMatch) {
-                document.getElementById('phone').value = phoneMatch[0].trim();
-            }
-
-            let cityMatch = transcript.match(/(?:város|lakik|lépett be)[\s:]*([a-záéíóöőúüű]+)/i);
-            if (cityMatch && cityMatch[1] !== "város") {
-                document.getElementById('city').value = cityMatch[1].charAt(0).toUpperCase() + cityMatch[1].slice(1);
-            }
-
-            if (transcript.includes('vásárló') || transcript.includes('csatlakozott') || transcript.includes('vett')) {
-                document.getElementById('status').value = 'vasarlo';
-            } else if (transcript.includes('partner') || transcript.includes('üzlet')) {
-                document.getElementById('status').value = 'partner';
-            } else {
-                document.getElementById('status').value = 'jelolt';
-            }
-
-            if (transcript.includes('gondolkozik')) {
-                document.getElementById('process').value = '3_htt';
-            } else if (transcript.includes('bemutató') || transcript.includes('látott')) {
-                document.getElementById('process').value = '2_bemutato';
-            } else if (transcript.includes('meghívás') || transcript.includes('meghívtam')) {
-                document.getElementById('process').value = '1_meghivas';
-            }
-
-            document.getElementById('occupation').value = "Egyéb";
-            
-            alert("✅ Az AI meghallgatta és kitöltötte az űrlapot!\n\nEzt hallottam: '" + event.results[0][0].transcript + "'\n\nKérlek, ellenőrizd az adatokat, egészítsd ki, majd kattints a Mentés gombra!");
-        };
-
-        recognition.onend = function() {
-            aiButton.innerHTML = originalText;
-            aiButton.style.background = "linear-gradient(135deg, #104a8e 0%, #00b4db 100%)";
-            aiButton.style.boxShadow = "0 4px 15px rgba(0, 180, 219, 0.4)";
+            aiBox.value = event.results[0][0].transcript;
+            alert("A szöveg bekerült az AI elemzőbe! Most kattints az 'Elemzés és Kitöltés' gombra!");
         };
 
         recognition.onerror = function(event) {
             console.error("AI Mikrofon hiba:", event.error);
-            alert("Hiba történt a mikrofon használatakor. Kérlek, engedélyezd a böngészőnek a mikrofonhoz való hozzáférést!");
-            aiButton.innerHTML = originalText;
-            aiButton.style.background = "linear-gradient(135deg, #104a8e 0%, #00b4db 100%)";
+            alert("Hiba történt a mikrofon használatakor.");
+            aiBox.value = "";
         };
 
         recognition.start();
@@ -522,7 +534,7 @@
                 }
                 container.innerHTML = '';
                 users.forEach(u => {
-                    container.innerHTML += `<button class="btn-outline" style="margin-right:10px; margin-bottom:10px; padding: 10px 15px;" onclick="viewTeamCrm(${u.id})">📂 ${u.name} listája</button>`;
+                    container.innerHTML += `<button class="btn-outline" style="margin-right:10px; margin-bottom:10px; padding: 10px 15px;" onclick="viewTeamCrm('${u.id}')">📂 ${u.name} listája</button>`;
                 });
             }
         } catch(e) { container.innerHTML = 'Hiba a kapcsolatban.'; }
@@ -655,10 +667,27 @@
     function openNoteModalFromProfile() { openNoteModal(document.getElementById('currentProfileId').value); }
     function openEditFromProfile() { closeModal('profileModal'); openEditContact(document.getElementById('currentProfileId').value); }
 
+    // ÚJ KONTAKT MENTÉSE (Itt rögzítjük az AI jegyzetet is)
     document.getElementById('crmForm').addEventListener('submit', function(e) {
-        e.preventDefault(); let selectedGroups = []; document.querySelectorAll('.new-group-cb:checked').forEach(cb => selectedGroups.push(cb.value)); let initialLinks = []; let firstLink = document.getElementById('fb').value; if (firstLink) initialLinks.push({ label: 'Közösségi profil', url: firstLink });
-        contacts.push({ id: generateId(), name: document.getElementById('name').value, status: document.getElementById('status').value, process: document.getElementById('process').value, occupation: document.getElementById('occupation').value, phone: document.getElementById('phone').value, email: document.getElementById('email').value, zip: document.getElementById('zip').value, city: document.getElementById('city').value, street: document.getElementById('street').value, house: document.getElementById('house').value, groups: selectedGroups, links: initialLinks, notes: [], tasks: [] });
-        saveAndRender(); this.reset();
+        e.preventDefault(); 
+        let selectedGroups = []; document.querySelectorAll('.new-group-cb:checked').forEach(cb => selectedGroups.push(cb.value)); 
+        let initialLinks = []; let firstLink = document.getElementById('fb').value; if (firstLink) initialLinks.push({ label: 'Közösségi profil', url: firstLink });
+        
+        let initialNotes = [];
+        let extraNote = document.getElementById('newContactNotes').value;
+        if (extraNote) {
+            const now = new Date();
+            initialNotes.push({
+                id: generateId(), timestamp: now.getTime(), type: 'info', text: extraNote, dateStr: now.toLocaleDateString()
+            });
+        }
+
+        contacts.push({ 
+            id: generateId(), name: document.getElementById('name').value, status: document.getElementById('status').value, process: document.getElementById('process').value, occupation: document.getElementById('occupation').value, phone: document.getElementById('phone').value, email: document.getElementById('email').value, zip: document.getElementById('zip').value, city: document.getElementById('city').value, street: document.getElementById('street').value, house: document.getElementById('house').value, groups: selectedGroups, links: initialLinks, notes: initialNotes, tasks: [] 
+        });
+        saveAndRender(); 
+        this.reset();
+        document.getElementById('newContactNotes').value = ''; // Extra törlése
     });
 
     function openEditContact(id) {
