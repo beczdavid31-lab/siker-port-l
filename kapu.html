@@ -74,7 +74,7 @@
             sponsor_fbo: document.getElementById('regSponsorId').value
         };
         try {
-            const res = await fetch('/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+            const res = await fetch('/api/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
             const data = await res.json();
             if (!res.ok) showAlert(data.error, 'error');
             else { showAlert(data.message, 'success'); setTimeout(() => switchTab('login'), 3000); }
@@ -84,7 +84,7 @@
     async function handleLogin(e) {
         e.preventDefault();
         try {
-            const res = await fetch('/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: document.getElementById('logEmail').value, password: document.getElementById('logPassword').value }) });
+            const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: document.getElementById('logEmail').value, password: document.getElementById('logPassword').value }) });
             const data = await res.json();
             if (!res.ok) showAlert(data.error, 'error');
             else {
