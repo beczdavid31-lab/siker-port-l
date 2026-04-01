@@ -6,7 +6,6 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-// 50MB limit, hogy több tízezer kontakt is elférjen egy mentésben
 app.use(express.json({ limit: '50mb' })); 
 app.use(cors());
 app.use(express.static(path.join(__dirname))); 
@@ -23,15 +22,15 @@ mongoose.connect(mongoURI)
   .then(() => console.log('✅ Sikeres csatlakozás a MongoDB Felhőhöz!'))
   .catch(err => console.error('❌ MongoDB hálózati hiba:', err));
 
-// --- 2. ADATBÁZIS MODELL (A felhasználók felépítése) ---
+// --- 2. ADATBÁZIS MODELL ---
 const userSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true }, // E-mail cím
+    username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     name: { type: String, required: true },
     fbo_id: { type: String },
     sponsor_fbo: { type: String },
-    role: { type: String, default: 'user' }, // 'admin' vagy 'user'
-    is_approved: { type: Boolean, default: false }, // Jóváhagyta-e már egy Admin
+    role: { type: String, default: 'user' }, 
+    is_approved: { type: Boolean, default: false }, // Ez a kulcs a belépéshez!
     crm_data: { type: String, default: '[]' },
     is_shared: { type: Boolean, default: false }
 });
@@ -39,9 +38,7 @@ const User = mongoose.model('User', userSchema);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'szuper_titkos_kulcs_2026';
 
-// --- 3. BIZTONSÁGI ŐRÖK (Middleware) ---
-
-// Sima bejelentkezés ellenőrzése
+// --- 3. BIZTONSÁGI ŐRÖK ---
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -54,7 +51,6 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// Külön Szigorú Admin ellenőrzés
 const authenticateAdmin = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -75,19 +71,16 @@ const authenticateAdmin = async (req, res, next) => {
 
 // --- 4. ALAP VÉGPONTOK (API) ---
 
-// Regisztráció (Az első ember automatikusan Admin lesz)
+// Regisztráció
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password, name, fbo_id, sponsor_fbo } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        // Megnézzük, hányan vannak már a rendszerben
         const userCount = await User.countDocuments();
         
-        // Ha 0 ember van, akkor ez a legelső regisztráció -> Ő lesz az ADMIN!
-        // Az Admin fiók alapból jóvá is van hagyva (is_approved: true)
         const userRole = (userCount === 0) ? 'admin' : 'user';
-        const isApproved = (userCount === 0) ? true : false;
+        const isApproved = (userCount === 0) ? true : false; // Az első admin egyből jóvá van hagyva
 
         const user = new User({ 
             username, 
@@ -100,14 +93,14 @@ app.post('/api/register', async (req, res) => {
         });
         
         await user.save();
-        res.status(201).json({ message: 'Sikeres regisztráció!' });
+        res.status(201).json({ message: 'Sikeres regisztráció! Fiókod jóváhagyásra vár.' });
     } catch (error) {
         console.error(error);
         res.status(400).json({ error: 'A felhasználónév már foglalt, vagy hiba történt.' });
     }
 });
 
-// Bejelentkezés
+// Bejelentkezés - ITT A LAKAT! 🔒
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -117,12 +110,13 @@ app.post('/api/login', async (req, res) => {
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(400).json({ error: 'Hibás jelszó.' });
         
-        // (Opcionális: Később ide betehetjük, hogy ha user.is_approved === false, ne engedje be a CRM-be, 
-        // de egyelőre beengedjük a Központba)
+        // --- A SZIGORÚ ELLENŐRZÉS ---
+        if (!user.is_approved) {
+            return res.status(403).json({ error: 'A fiókod még jóváhagyásra vár! Kérlek, jelezd a szponzorodnak vagy egy Adminnak.' });
+        }
+        // ------------------------------
         
         const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET);
-        
-        // Visszaküldjük a rangot (role) is!
         res.json({ token, name: user.name, role: user.role });
     } catch (error) {
         res.status(500).json({ error: 'Szerver hiba.' });
@@ -159,7 +153,7 @@ app.post('/api/share', authenticateToken, async (req, res) => {
     }
 });
 
-// Csapat adatainak lekérése
+// Csapat lekérése
 app.get('/api/team/shared', authenticateToken, async (req, res) => {
     try {
         const users = await User.find({ is_shared: true, _id: { $ne: req.user.id } }, '_id name');
@@ -170,7 +164,7 @@ app.get('/api/team/shared', authenticateToken, async (req, res) => {
     }
 });
 
-// Egy adott csapattag névlistájának lekérése
+// Egy adott csapattag lekérése
 app.get('/api/team/shared/:id', authenticateToken, async (req, res) => {
     try {
         const targetUser = await User.findById(req.params.id);
@@ -183,19 +177,17 @@ app.get('/api/team/shared/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// --- 5. ADMIN VÉGPONTOK (Csak a Király férhet hozzá) ---
+// --- 5. ADMIN VÉGPONTOK ---
 
-// Összes felhasználó lekérése az Admin Panelhez
 app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
     try {
-        const users = await User.find({}, '-password'); // Jelszó nélkül küldjük!
+        const users = await User.find({}, '-password'); 
         res.json(users);
     } catch (error) {
         res.status(500).json({ error: 'Hiba a felhasználók lekérésekor.' });
     }
 });
 
-// Felhasználó jóváhagyása
 app.post('/api/admin/approve/:id', authenticateAdmin, async (req, res) => {
     try {
         await User.findByIdAndUpdate(req.params.id, { is_approved: true });
@@ -205,7 +197,6 @@ app.post('/api/admin/approve/:id', authenticateAdmin, async (req, res) => {
     }
 });
 
-// Felhasználó Adminná tétele
 app.post('/api/admin/make-admin/:id', authenticateAdmin, async (req, res) => {
     try {
         await User.findByIdAndUpdate(req.params.id, { role: 'admin', is_approved: true });
@@ -215,7 +206,6 @@ app.post('/api/admin/make-admin/:id', authenticateAdmin, async (req, res) => {
     }
 });
 
-// Felhasználó végleges törlése
 app.delete('/api/admin/user/:id', authenticateAdmin, async (req, res) => {
     try {
         await User.findByIdAndDelete(req.params.id);
@@ -225,7 +215,6 @@ app.delete('/api/admin/user/:id', authenticateAdmin, async (req, res) => {
     }
 });
 
-// Kezdőoldal irányítása
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'kapu.html')));
 
 // --- 6. SZERVER INDÍTÁSA ---
