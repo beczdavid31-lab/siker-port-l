@@ -214,10 +214,19 @@ app.post('/api/ai-parse', authenticateToken, async (req, res) => {
             return res.status(500).json({ error: 'Nincs beállítva a Gemini API kulcs a szerveren!' });
         }
 
-        const prompt = `Légy szíves nyerd ki a következő magyar nyelvű szövegből a CRM adatokat, és KIZÁRÓLAG egy érvényes JSON objektumot adj vissza (ne használj markdown formázást, se \`\`\`json jelölést, csak a tiszta JSON-t), a következő kulcsokkal: "name" (név), "email" (email cím), "phone" (telefonszám), "notes" (minden egyéb hasznos megjegyzés). Ha valamelyik adat hiányzik a szövegből, hagyd az értékét üresen (""). Szöveg: "${rawText}"`;
+        const prompt = `Te egy profi CRM asszisztens vagy. A feladatod: elemezd a kapott magyar nyelvű, sokszor hadart vagy élőbeszédes szöveget. 
+Keresd ki: 
+1. Név (Vezetéknév és Keresztnév, nagybetűvel).
+2. Telefonszám (formázd nemzetközi alakba: +36...).
+3. Email cím.
+4. Megjegyzés (minden más: miről beszéltek, mikor kell hívni, mi érdekli).
 
-        // JAVÍTVA: A te API kulcsodhoz tartozó legújabb, villámgyors modellt használjuk!
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+KIZÁRÓLAG egy tiszta JSON objektumot adj vissza, semmi mást!
+Struktúra: {"name": "...", "email": "...", "phone": "...", "notes": "..."}
+Szöveg: "${rawText}"`;
+
+        // A GOLYÓÁLLÓ, KLASSZIKUS MODELL: gemini-pro
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -242,7 +251,6 @@ app.post('/api/ai-parse', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Hiba történt a mesterséges intelligencia feldolgozása során.' });
     }
 });
-
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'kapu.html')));
 
 // --- 7. SZERVER INDÍTÁSA ---
