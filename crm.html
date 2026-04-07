@@ -627,24 +627,44 @@
         const sZip = document.getElementById('searchZip').value.toLowerCase();
         const fStatus = document.getElementById('filterStatus').value;
         const fProcess = document.getElementById('filterProcess').value;
-        list.innerHTML = '';
+        
+        // ÚJ: Csinálunk egy üres "dobozt", amiben összegyűjtjük a sorokat
+        let htmlContent = ''; 
 
         contacts.forEach(c => {
-            if(fStatus !== 'all' && c.status !== fStatus) return; if(fProcess !== 'all' && c.process !== fProcess) return;
-            const matchName = !sName || c.name.toLowerCase().includes(sName); const matchOcc = !sOcc || (c.occupation || '').toLowerCase().includes(sOcc); const matchZip = !sZip || (c.zip || '').toLowerCase().startsWith(sZip);
+            if(fStatus !== 'all' && c.status !== fStatus) return; 
+            if(fProcess !== 'all' && c.process !== fProcess) return;
+            const matchName = !sName || c.name.toLowerCase().includes(sName); 
+            const matchOcc = !sOcc || (c.occupation || '').toLowerCase().includes(sOcc); 
+            const matchZip = !sZip || (c.zip || '').toLowerCase().startsWith(sZip);
             if(!(matchName && matchOcc && matchZip)) return;
 
-            let links = '<div class="contact-links" style="margin-top:6px;">'; (c.links || []).forEach(link => { links += `<a href="${link.url}" target="_blank">🌐 ${link.label}</a>`; }); links += '</div>';
+            let links = '<div class="contact-links" style="margin-top:6px;">'; 
+            (c.links || []).forEach(link => { links += `<a href="${link.url}" target="_blank">🌐 ${link.label}</a>`; }); 
+            links += '</div>';
+            
             let phoneLink = c.phone ? `<a href="tel:${c.phone}" style="color:#104a8e; text-decoration:none; font-weight:bold;">📞 ${c.phone}</a>` : `<span style="color:#999;">📞 -</span>`;
             let emailLink = c.email ? `<a href="mailto:${c.email}" style="color:#104a8e; text-decoration:none; font-weight:bold;">📧 Email</a>` : `<span style="color:#999;">📧 -</span>`;
-            let btnProfile = currentLang === 'hu' ? '📖 Adatlap & Jegyzetek' : '📖 Profile & Notes'; let btnCal = currentLang === 'hu' ? '📅 Naptár' : '📅 Calendar'; let btnEdit = currentLang === 'hu' ? '✏️ Szerkesztés' : '✏️ Edit'; let btnDel = currentLang === 'hu' ? '🗑️ Törlés' : '🗑️ Delete'; let emptyMsg = currentLang === 'hu' ? 'Nincs megadva' : 'Not provided';
+            
+            let btnProfile = currentLang === 'hu' ? '📖 Adatlap & Jegyzetek' : '📖 Profile & Notes'; 
+            let btnCal = currentLang === 'hu' ? '📅 Naptár' : '📅 Calendar'; 
+            let btnEdit = currentLang === 'hu' ? '✏️ Szerkesztés' : '✏️ Edit'; 
+            let btnDel = currentLang === 'hu' ? '🗑️ Törlés' : '🗑️ Delete'; 
+            let emptyMsg = currentLang === 'hu' ? 'Nincs megadva' : 'Not provided';
 
             let actionBtns = `<button class="btn-small btn-green" onclick="openProfile('${c.id}')" style="font-size: 12px; padding: 10px 12px; margin-bottom: 8px; width: 100%;">${btnProfile}</button><br><button class="btn-small btn-yellow" onclick="openTaskModal('${c.id}')">${btnCal}</button><button class="btn-small btn-outline" onclick="openEditContact('${c.id}')">${btnEdit}</button><button class="btn-small btn-red" onclick="deleteContact('${c.id}')">${btnDel}</button>`;
+            
             let dropdowns = `<select onchange="changeAttr('${c.id}', 'status', this.value)" style="padding:8px; font-size:12px; margin-bottom:8px; width: 100%; border-radius: 4px; border: 1px solid #104a8e;"><option value="jelolt" ${c.status==='jelolt'?'selected':''}>Jelölt / Prospect</option><option value="vasarlo" ${c.status==='vasarlo'?'selected':''}>Vásárló / Customer</option><option value="partner" ${c.status==='partner'?'selected':''}>Üzleti partner</option><option value="ful" ${c.status==='ful'?'selected':''}>FÜL / Pending</option></select><select onchange="changeAttr('${c.id}', 'process', this.value)" style="padding:8px; font-size:12px; width: 100%; border-radius: 4px; border: 1px solid #104a8e;"><option value="0_jelolt" ${c.process==='0_jelolt'?'selected':''}>0. Jelölt</option><option value="1_meghivas" ${c.process==='1_meghivas'?'selected':''}>1. Meghívás</option><option value="2_bemutato" ${c.process==='2_bemutato'?'selected':''}>2. Bemutató</option><option value="3_htt" ${c.process==='3_htt'?'selected':''}>3. HTT</option><option value="4_belepes" ${c.process==='4_belepes'?'selected':''}>4. Belépés/Vás.</option><option value="5_elinditas" ${c.process==='5_elinditas'?'selected':''}>5. Elindítás</option><option value="6_munkatars" ${c.process==='6_munkatars'?'selected':''}>6. Munkatárs</option></select>`;
 
-            list.innerHTML += `<tr><td style="background: white;"><strong style="font-size: 16px; color: #104a8e;">${c.name}</strong><br><span style="font-size:12px; color:#666; font-weight: bold; display:inline-block; margin-bottom:4px;">${c.occupation || emptyMsg}</span><br><span style="font-size:13px; color:#444;">${phoneLink} | ${emailLink}</span><br>${links}</td><td style="background: #fdfdfd;">${dropdowns}</td><td style="background: white;">${actionBtns}</td></tr>`;
+            // ÚJ: Hozzáadjuk a sort a csomaghoz (NEM rajzoltatjuk ki a böngészővel!)
+            htmlContent += `<tr><td style="background: white;"><strong style="font-size: 16px; color: #104a8e;">${c.name}</strong><br><span style="font-size:12px; color:#666; font-weight: bold; display:inline-block; margin-bottom:4px;">${c.occupation || emptyMsg}</span><br><span style="font-size:13px; color:#444;">${phoneLink} | ${emailLink}</span><br>${links}</td><td style="background: #fdfdfd;">${dropdowns}</td><td style="background: white;">${actionBtns}</td></tr>`;
         });
-        calculateStats(); renderCalendars();
+        
+        // ÚJ: A legvégén, EGYETLEN LÉPÉSBEN berakjuk mind az 1000 embert a táblázatba!
+        list.innerHTML = htmlContent;
+
+        calculateStats(); 
+        renderCalendars();
     }
 
     function openProfile(id) {
